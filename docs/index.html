@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gate-ops — No gate, no ship.</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--line:#21262d;--text:#e6edf3;--muted:#8b949e;
+    --teal:#2dd4a7;--teal-dim:#0f6e56;--purple:#a5a1f2;--amber:#efb443;--red:#f0716a;--mono:ui-monospace,'SF Mono',Menlo,monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font:16px/1.7 -apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px}
+  a{color:var(--teal);text-decoration:none}
+  .kicker{font-family:var(--mono);color:var(--teal);font-size:13px;letter-spacing:.2em;text-transform:uppercase}
+  .lang-switch{position:absolute;top:24px;right:24px;font-family:var(--mono);font-size:12px;z-index:10}
+  .lang-switch button{background:none;border:1px solid var(--line);color:var(--muted);padding:5px 12px;cursor:pointer;font-family:var(--mono);font-size:12px}
+  .lang-switch button:first-child{border-radius:8px 0 0 8px}
+  .lang-switch button:last-child{border-radius:0 8px 8px 0;border-left:none}
+  .lang-switch button.on{color:var(--teal);border-color:var(--teal-dim);background:rgba(45,212,167,.08)}
+  header{padding:88px 0 56px;text-align:center;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+  .ship{font-size:56px;display:block;animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  h1{font-size:56px;letter-spacing:-.02em;margin:8px 0 4px}
+  h1 .g{color:var(--teal)}
+  .tagline{font-family:var(--mono);font-size:20px;color:var(--amber);margin-bottom:14px}
+  .sub{color:var(--muted);max-width:640px;margin:0 auto 32px}
+  .cta{display:inline-block;padding:12px 28px;margin:0 6px;border-radius:10px;font-weight:600}
+  .cta.primary{background:var(--teal-dim);color:#fff}
+  .cta.primary:hover{background:#12876c}
+  .cta.ghost{border:1px solid var(--line);color:var(--text)}
+  .cta.ghost:hover{border-color:var(--teal)}
+  .gate-demo{margin:56px auto 0;max-width:760px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;text-align:left}
+  .gate-title{font-family:var(--mono);font-size:13px;color:var(--muted);margin-bottom:18px}
+  .pipeline{display:flex;gap:0;align-items:center;justify-content:space-between}
+  .stage{flex:1;text-align:center;opacity:.35;transition:.4s}
+  .stage .ic{width:52px;height:52px;margin:0 auto 8px;border-radius:12px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .stage .nm{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .stage.on{opacity:1}
+  .stage.on .ic{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal-dim)}
+  .stage.on .nm{color:var(--teal)}
+  .stage.wait .ic{border-color:var(--amber)}
+  .stage.wait .nm{color:var(--amber)}
+  .link{flex:0 0 24px;height:2px;background:var(--line);position:relative;top:-14px}
+  .link.on{background:var(--teal)}
+  .confirm-row{text-align:center;margin-top:22px}
+  .btn{font-family:var(--mono);font-size:13px;padding:9px 20px;border-radius:8px;border:1px solid var(--amber);background:none;color:var(--amber);cursor:pointer;transition:.3s}
+  .btn:hover{background:rgba(239,180,67,.12)}
+  .btn:disabled{opacity:.4;cursor:default}
+  .plan-id{font-family:var(--mono);font-size:13px;color:var(--teal);margin-left:12px;opacity:0;transition:.4s}
+  .plan-id.show{opacity:1}
+  section{padding:64px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:30px;margin-bottom:8px}
+  .sec-sub{color:var(--muted);margin-bottom:32px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
+  .card h3{font-size:16px;margin-bottom:8px}
+  .card h3 .tag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:20px;vertical-align:2px;margin-left:6px}
+  .tag.core{background:rgba(45,212,167,.15);color:var(--teal)}
+  .card p{color:var(--muted);font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-family:var(--mono);font-size:12px;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.incident{color:var(--red)}
+  td.gate{color:var(--teal)}
+  .term{background:#010409;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .term-bar{padding:10px 16px;background:var(--panel);font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .term-body{padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.9}
+  .c-com{color:#6e7681}.c-cmd{color:#e6edf3}.c-out{color:var(--teal)}.c-warn{color:var(--amber)}
+  .int-grid{display:flex;flex-wrap:wrap;gap:12px}
+  .chip{font-family:var(--mono);font-size:13px;padding:8px 18px;border:1px solid var(--line);border-radius:24px;background:var(--panel)}
+  .chip b{color:var(--teal)}
+  footer{padding:40px 0;text-align:center;color:var(--muted);font-size:13px}
+  .foot-quote{font-family:var(--mono);color:var(--teal);margin-bottom:8px}
+  code{font-family:var(--mono);font-size:.9em;color:var(--teal)}
+  /* threat model tabs */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .tab{font-family:var(--mono);font-size:13px;padding:8px 18px;border-radius:24px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;transition:.25s}
+  .tab.on{border-color:var(--teal);color:var(--teal);background:rgba(45,212,167,.08)}
+  .threat-panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px}
+  .threat-panel.on{display:block}
+  .threat-item{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .threat-item:last-child{border-bottom:none}
+  .t-scen{color:var(--red)}
+  .t-gate{color:var(--teal)}
+  .threat-item .lbl{font-family:var(--mono);font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+  @media(max-width:640px){.threat-item{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="lang-switch">
+    <button id="btn-en" class="on" onclick="setLang('en')">EN</button><button id="btn-zh" onclick="setLang('zh')">中文</button>
+  </div>
+  <div class="wrap">
+    <span class="ship">🚢</span>
+    <span class="kicker" data-i18n="kicker"></span>
+    <h1>gate<span class="g">-ops</span></h1>
+    <div class="tagline" data-i18n="tagline"></div>
+    <p class="sub" data-i18n="sub"></p>
+    <a class="cta primary" href="https://github.com/evcgs/gate-ops" data-i18n="cta1"></a>
+    <a class="cta ghost" href="https://github.com/evcgs/gate-ops" data-i18n="cta2"></a>
+
+    <div class="gate-demo">
+      <div class="gate-title" data-i18n="demoTitle"></div>
+      <div class="pipeline">
+        <div class="stage" id="s1"><div class="ic">📋</div><div class="nm" data-i18n="st1"></div></div>
+        <div class="link" id="l1"></div>
+        <div class="stage" id="s2"><div class="ic">🔑</div><div class="nm" data-i18n="st2"></div></div>
+        <div class="link" id="l2"></div>
+        <div class="stage" id="s3"><div class="ic">📦</div><div class="nm" data-i18n="st3"></div></div>
+        <div class="link" id="l3"></div>
+        <div class="stage" id="s4"><div class="ic">🚢</div><div class="nm" data-i18n="st4"></div></div>
+        <div class="link" id="l4"></div>
+        <div class="stage" id="s5"><div class="ic">🩺</div><div class="nm" data-i18n="st5"></div></div>
+      </div>
+      <div class="confirm-row">
+        <button class="btn" id="gateBtn" onclick="runPipeline()" data-i18n="btnPlan"></button>
+        <span class="plan-id" id="planId"></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="kicker" data-i18n="whyKick"></span>
+    <h2 data-i18n="whyH2"></h2>
+    <p class="sec-sub" data-i18n="whySub"></p>
+    <table>
+      <tr><th data-i18n="thIncident"></th><th data-i18n="thGate"></th></tr>
+      <tr><td class="incident" data-i18n="inc1"></td><td class="gate" data-i18n="gate1"></td></tr>
+      <tr><td class="incident" data-i18n="inc2"></td><td class="gate" data-i18n="gate2"></td></tr>
+      <tr><td class="incident" data-i18n="inc3"></td><td class="gate" data-i18n="gate3"></td></tr>
+      <tr><td class="incident" data-i18n="inc4"></td><td class="gate" data-i18n="gate4"></td></tr>
+      <tr><td class="incident" data-i18n="inc5"></td><td class="gate" data-i18n="gate5"></td></tr>
+      <tr><td class="incident" data-i18n="inc6"></td><td class="gate" data-i18n="gate6"></td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="kicker" data-i18n="procKick"></span>
+    <h2 data-i18n="procH2"></h2>
+    <p class="sec-sub" data-i18n="procSub"></p>
+    <div class="grid">
+      <div class="card"><h3>🚢 <span data-i18n="p1n"></span> <span class="tag core">CORE</span></h3><p data-i18n="p1d"></p></div>
+      <div class="card"><h3>↩️ <span data-i18n="p2n"></span></h3><p data-i18n="p2d"></p></div>
+      <div class="card"><h3>🔌 <span data-i18n="p3n"></span></h3><p data-i18n="p3d"></p></div>
+      <div class="card"><h3>🗂️ <span data-i18n="p4n"></span></h3><p data-i18n="p4d"></p></div>
+      <div class="card"><h3>🔍 <span data-i18n="p5n"></span></h3><p data-i18n="p5d"></p></div>
+      <div class="card"><h3>🩹 <span data-i18n="p6n"></span></h3><p data-i18n="p6d"></p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="kicker" data-i18n="qsKick"></span>
+    <h2 data-i18n="qsH2"></h2>
+    <div class="term" style="margin-top:24px">
+      <div class="term-bar"><span class="dot" style="background:#f0716a"></span><span class="dot" style="background:#efb443"></span><span class="dot" style="background:#2dd4a7"></span>&nbsp;zsh</div>
+      <div class="term-body">
+<span class="c-com" id="qc1"></span><br>
+<span class="c-cmd">$</span> bash scripts/gateo-init.sh --integration claude<br>
+<span class="c-out" id="qo1"></span><br><br>
+<span class="c-com" id="qc2"></span><br>
+<span class="c-cmd">$</span> PROJECT=myapp bash scripts/gateo-plan.sh backend<br>
+<span class="c-out" id="qo2"></span><br><br>
+<span class="c-warn" id="qc3"></span><br>
+<span class="c-cmd">$</span> PROJECT=myapp bash scripts/gateo-apply.sh &lt;plan&gt; GTO-7f3a…e91b<br>
+<span class="c-out" id="qo3"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="kicker" data-i18n="tmKick"></span>
+    <h2 data-i18n="tmH2"></h2>
+    <p class="sec-sub" data-i18n="tmSub"></p>
+    <div class="tabs" id="tmTabs"></div>
+    <div id="tmPanels"></div>
+    <p style="margin-top:16px;color:var(--muted);font-size:13px"><span data-i18n="tmFull"></span> <a href="https://github.com/evcgs/gate-ops/blob/main/references/misoperations.md" data-i18n="tmLink"></a></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="kicker" data-i18n="intKick"></span>
+    <h2 data-i18n="intH2"></h2>
+    <p class="sec-sub" data-i18n="intSub"></p>
+    <div class="int-grid">
+      <span class="chip"><b>workbuddy</b> · skills/gate-ops</span>
+      <span class="chip"><b>claude</b> · Claude Code</span>
+      <span class="chip"><b>codex</b> · AGENTS.md</span>
+      <span class="chip"><b>generic</b> · <span data-i18n="anyAgent"></span></span>
+      <span class="chip" style="border-style:dashed;color:#8b949e" data-i18n="prChip"></span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="kicker" data-i18n="compKick"></span>
+    <h2 data-i18n="compH2"></h2>
+    <p class="sec-sub" data-i18n="compSub"></p>
+    <div class="grid">
+      <div class="card"><h3>📐 spec-kit</h3><p data-i18n="compSpec"></p></div>
+      <div class="card"><h3>🚢 gate-ops</h3><p data-i18n="compGate"></p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-quote">"能上线不算完，能回滚才算稳。"</div>
+  <div data-i18n="footLine"></div>
+  <div style="margin-top:12px"><a href="https://github.com/evcgs/gate-ops">github.com/evcgs/gate-ops</a> · MIT License</div>
+</footer>
+
+<script>
+const I18N = {
+en:{
+ kicker:"gate-driven release operations",
+ tagline:"No gate, no ship.",
+ sub:"An operations-discipline skill for AI coding agents. Every rule is an executable gate that grew out of a real production incident — agents <em>cannot</em> bypass it, only pass it.",
+ cta1:"Get Started", cta2:"GitHub →",
+ demoTitle:"THE GATED PIPELINE — try confirming a release",
+ st1:"plan",st2:"confirm",st3:"backup",st4:"apply",st5:"verify",
+ btnPlan:"generate plan",
+ whyKick:"why", whyH2:"Gates, not prompts.",
+ whySub:"\"Please be careful when deploying\" fails exactly when it matters. Each lesson became a gate the agent must physically pass.",
+ thIncident:"REAL INCIDENT", thGate:"GATE IT PRODUCED",
+ inc1:"rsync --delete wiped a production SQLite DB inside the sync target",
+ gate1:"bind-mount data-safety checklist + verified excludes",
+ inc2:"\"Deployed OK\" — while the old process was still running",
+ gate2:"readiness probe; HTTP 4xx/5xx = failure",
+ inc3:"Health check failed at 30s; app was just warming up",
+ gate3:"triage: process alive → extend observation 60s before rollback",
+ inc4:"Release plan edited between approval and execution",
+ gate4:"immutable manifest: SHA-256 fingerprints + TTL + plan-ID confirmation",
+ inc5:"Agent onboarded the wrong system \"from memory\"",
+ gate5:"identity anchoring (Iron Rule 0) + receipt identity line",
+ inc6:"Receipt claimed \"committed\" — files were still untracked",
+ gate6:"cross-artifact audit: gateo-doctor --deep",
+ procKick:"processes", procH2:"Six entries, hard endpoints.",
+ procSub:"Borrowed from spec-kit's process presets: independent entry points, and crossing a boundary always requires the user's instruction.",
+ p1n:"release", p1d:"plan → confirm plan-ID → apply → verify. Deploy scripts refuse to run outside the pipeline — by design.",
+ p2n:"rollback", p2d:"Exact snapshot restore with sha256/md5 sidecars. No plan gate — real failures move fast.",
+ p3n:"onboarding", p3d:"Five-stage guided flow: facts → bind-mount safety (P0) → artifacts → self-checks → receipt.",
+ p4n:"data-change", p4d:"DB content changes &amp; bulk generation: brand-named backups, reference checks, ledger row.",
+ p5n:"audit", p5d:"Read-only. Receipt is the endpoint — it never auto-advances into a release.",
+ p6n:"hotfix", p6d:"Assess root cause → scoped minimal fix → recorded verification. No fast lane around gates.",
+ qsKick:"quick start", qsH2:"Three commands to a gated release.",
+ qc1:"# install — one source of truth, symlinked into your agent's skills dir",
+ qo1:"✅ gate-ops linked → ~/.claude/skills/gate-ops  (self-check: 3/3 OK)",
+ qc2:"# plan — read-only; embeds the file-level diff list",
+ qo2:"📋 plan GTO-7f3a…e91b · diffs: routes.py · TTL 1800s · backup scheduled",
+ qc3:"# you confirm the plan ID — confirmation IS the gate",
+ qo3:"✅ backup verified → synced → readiness 200 → ledger row written",
+ intKick:"integrations", intH2:"One truth, thin adapters.",
+ intSub:"Same approach as spec-kit's <code>specify init</code>: installs are symlinks; upgrading once updates every host. Adding an integration is one path + one hint — PRs welcome.",
+ anyAgent:"any agent", prChip:"your host? → PR",
+ compKick:"complements", compH2:"spec-kit before the code. gate-ops after it.",
+ compSub:"Same philosophy — structured process, artifact chains, confirmation gates, evidence. Chain them: converge your spec, then ship through the gates.",
+ compSpec:"Specify → Plan → Tasks → Implement → Converge. Intent and evidence ahead of implementation.",
+ compGate:"precheck → plan → confirm → apply → verify → rollback. Discipline after the code exists.",
+ footLine:"It's not done when it's up. It's done when you can roll it back.",
+ tPlanning:"planning…", tReleased:"released ✅ (rollback point saved)",
+ tWait:"GTO-7f3a…e91b · waiting for plan-ID confirmation",
+ tm:{
+  kick:"threat model", h2:"Every misoperation we've lived through.",
+  sub:"In the one-sentence-agent era, the risk is no longer clumsy hands — it is semantic overreach, silent data destruction and missing evidence. Five classes, every entry a real incident, every one blocked by a gate.",
+  full:"Full playbook with self-check commands:",
+  link:"references/misoperations.md",
+  cls:{
+   A:["A · Semantic overreach",[
+     ["A discussion gets executed as a release — \"the user was just asking about methods\"","Plan-ID confirmation is the ONLY release authorization (Iron Rule 4)"],
+     ["Agent infers the target system from memory because the task didn't name it","Iron Rule 0: identity from the user only; restate before working"],
+     ["Audit output auto-advances into a deploy","Process-boundary decoupling: crossing a process = new task = user instruction"]]],
+   B:["B · Data destruction",[
+     ["rsync --delete wipes a production SQLite DB living inside the sync target","Bind-mount 5-step checklist; precheck must show zero data dirs in diffs"],
+     ["Server-only secrets (compose override, .env) deleted by --delete","Copy back into git, or global rsync excludes — never both missing"],
+     ["Overwrite proceeds on an empty/truncated backup","Triple validation before overwrite: full tar read + md5 sidecar + scene fingerprint"]]],
+   C:["C · State misjudgment",[
+     ["\"Deployed OK\" — while the old process was still running","Three-level readiness semantics + response-body check"],
+     ["30s health window declares failure on an app that needs 60s to warm up","Triage: process alive → auto-extend observation 60s before any rollback"],
+     ["Local pending work misread as a cloud hot-fix (or the reverse)","Direction verdict by content evidence only — cloud mtime is untrustworthy"]]],
+   D:["D · Missing evidence",[
+     ["Receipt says \"committed\" — files are still untracked in the worktree","Post-commit git status check + gateo-doctor --deep drift detection"],
+     ["Shared-script edits undeclared, attribution lost in someone else's commit","Commit shared-script changes immediately and alone, with motive in the message"],
+     ["Credentials echoed into tool output while verifying","grep -c for existence, NEVER echo the value; receipts show <server> only"]]],
+   E:["E · Concurrency",[
+     ["Two sessions deploy at once, overwriting each other","Nonce release lock with heartbeat + host check; 30-min auto-reclaim"],
+     ["Parallel source edits with unknown ownership get shipped blindly","Single-writer releases; attribution adjudication + ledger row before any apply"],
+     ["Two local copies of the same system — the edited one isn't the deployed one","One authoritative LOCAL_APP_DIR per profile; stale copies marked deprecated"]]]
+  }
+  }
+ },
+zh:{
+ kicker:"闸门驱动的发版运维",
+ tagline:"No gate, no ship.（无闸门，不启航）",
+ sub:"面向 AI 编码 Agent 的运维纪律技能。每条规则都是可执行的闸门，长自一次真实生产事故——Agent <em>绕不过去</em>，只能通过它。",
+ cta1:"快速开始", cta2:"GitHub →",
+ demoTitle:"闸门流水线——试一次发版确认",
+ st1:"计划",st2:"确认",st3:"备份",st4:"执行",st5:"验收",
+ btnPlan:"生成计划",
+ whyKick:"为什么", whyH2:"要闸门，不要提示词。",
+ whySub:"靠提示词约束（\"部署时请小心\"）恰恰在关键时刻失效。每个教训都固化成了 Agent 必须实际通过的闸门。",
+ thIncident:"真实事故", thGate:"产出的闸门",
+ inc1:"rsync --delete 把同步目标内的生产 SQLite 库整目录删除",
+ gate1:"bind-mount 数据安全 checklist + 实测验证的排除项",
+ inc2:"宣布\"部署成功\"——旧进程其实还在运行",
+ gate2:"就绪探活；HTTP 4xx/5xx = 失败",
+ inc3:"健康检查 30 秒报失败，应用其实还在预热",
+ gate3:"失败甄别：进程存活 → 自动延长观察 60 秒再谈回滚",
+ inc4:"计划在确认与执行之间被篡改",
+ gate4:"不可变 manifest：SHA-256 指纹 + 有效期 + 确切计划 ID 确认",
+ inc5:"Agent 凭\"历史记忆\"接错了系统",
+ gate5:"身份锚定（铁律 0）+ 回执第一行身份声明",
+ inc6:"回执声称\"已提交\"——文件还在工作区没提交",
+ gate6:"跨产物一致性体检：gateo-doctor --deep",
+ procKick:"过程", procH2:"六个入口，硬终点。",
+ procSub:"借鉴 spec-kit 的过程预设：独立入口，且跨越过程边界必须由用户显式指令发起。",
+ p1n:"发版", p1d:"计划 → 确认计划 ID → 执行 → 验收。在流水线之外跑部署脚本会被直接拒绝——这是设计。",
+ p2n:"回滚", p2d:"精确快照恢复 + sha256/md5 边车校验。不走计划闸门——真故障越快越好。",
+ p3n:"接入", p3d:"五阶段引导：部署事实 → bind-mount 数据安全（P0）→ 产物 → 四项自验 → 审计回执。",
+ p4n:"内容变更", p4d:"数据库内容变更与批量生成：品牌化备份、引用检查、台账行。",
+ p5n:"审计", p5d:"只读。回执即终点——绝不自动转入发版。",
+ p6n:"热修复", p6d:"根因评估 → 最小范围修复 → 验证留痕。没有绕过闸门的快车道。",
+ qsKick:"快速开始", qsH2:"三条命令，一次闸门发版。",
+ qc1:"# 安装——同一真源，软链进你 agent 的技能目录",
+ qo1:"✅ gate-ops 已链接 → ~/.claude/skills/gate-ops（自检 3/3 通过）",
+ qc2:"# 计划——只读；差异清单直接嵌进计划摘要",
+ qo2:"📋 计划 GTO-7f3a…e91b · 差异：routes.py · 有效期 1800s · 备份已预定",
+ qc3:"# 你确认计划 ID——确认本身就是闸门",
+ qo3:"✅ 备份校验通过 → 同步 → readiness 200 → 台账已写入",
+ intKick:"集成", intH2:"同一真源，薄适配。",
+ intSub:"与 spec-kit 的 <code>specify init</code> 同一方法：安装即软链，升级一处全端生效。新增一个集成 = 一个路径 + 一条提示——欢迎 PR。",
+ anyAgent:"任意宿主", prChip:"你的宿主？→ PR",
+ compKick:"互补", compH2:"spec-kit 管代码之前，gate-ops 管代码之后。",
+ compSub:"同一哲学——结构化过程、产物链、确认闸门、证据留痕。天然可串联：用 spec-kit 收敛规格，用 gate-ops 闸门交付。",
+ compSpec:"Specify → Plan → Tasks → Implement → Converge。意图与证据先于实现。",
+ compGate:"预检 → 计划 → 确认 → 执行 → 验收 → 回滚。代码存在之后的纪律。",
+ footLine:"能上线不算完，能回滚才算稳。",
+ tPlanning:"计划生成中…", tReleased:"发布完成 ✅（回滚点已保存）",
+ tWait:"GTO-7f3a…e91b · 等待计划 ID 确认",
+ tm:{
+  kick:"误操作场景库", h2:"我们真实踩过的每一类误操作。",
+  sub:"在\"一句话 Agent 操作\"时代，风险不再是手滑——而是语义越界、静默毁数与留痕缺失。五大类，每条都是真实事故，每条都有闸门挡着。",
+  full:"完整手册（含自检命令与一句话时代口诀）：",
+  link:"references/misoperations.md",
+  cls:{
+   A:["A · 语义越界",[
+     ["讨论被当成发版执行——\"用户只是在问方法\"","计划 ID 确认是唯一发版授权（铁律 4）"],
+     ["任务书没写系统名，Agent 凭历史记忆自行推断目标系统","铁律 0：身份只来自用户；开工前复述本次系统与依据"],
+     ["审计产出被顺手推进成发版","过程边界解耦：跨过程 = 新任务 = 需要用户指令"]]],
+   B:["B · 数据毁灭",[
+     ["rsync --delete 把同步目标内的生产 SQLite 库整目录删除","bind-mount 五步 checklist；precheck 差异清单里出现数据目录 = 红灯"],
+     ["服务器独有密钥（compose 覆盖、.env）被 --delete 误删","拷回本地入 git 或全局排除——两者缺一即事故"],
+     ["备份是空/截断的，覆盖照常进行","覆盖前三重校验：tar 全量读 + md5 边车 + 现场指纹比对"]]],
+   C:["C · 状态误判",[
+     ["\"部署成功\"——旧进程其实还在运行","三层就绪语义 + 响应体校验"],
+     ["30 秒健康窗口把预热中的应用判死","失败甄别：进程存活 → 自动延长观察 60 秒再谈回滚"],
+     ["本地待发内容被误读为云端热修（或反向）","方向判定只认内容证据——云端 mtime 不可信"]]],
+   D:["D · 留痕缺失",[
+     ["回执说\"已提交\"——文件还在工作区未跟踪","提交后 git status 检查 + gateo-doctor --deep 归属漂移检测"],
+     ["共享脚本改动不声明，归属在别人的提交里丢失","共享脚本改动立即单独提交，动机写进 commit message"],
+     ["验证凭据时把 IP/密钥路径 echo 进了工具输出","只 grep -c 查存在性，永不 echo 值；回执只见 <server>"]]],
+   E:["E · 并发冲突",[
+     ["两个会话同时发版，互相覆盖","nonce 发版锁 + 心跳 + 主机校验；30 分钟未释放自动回收"],
+     ["并行改源码归属不明，被盲目发版","发版单写者；apply 前归属判定 + 台账行"],
+     ["同一系统两份本地副本——改的不是发的那份","档案 LOCAL_APP_DIR 唯一权威；旧副本标注废弃"]]]
+  }
+  }
+  }
+};
+let LANG = localStorage.getItem('gateo-lang') || 'en';
+function setLang(l){
+  LANG = l; localStorage.setItem('gateo-lang', l);
+  document.documentElement.lang = l==='zh' ? 'zh-CN' : 'en';
+  document.getElementById('btn-en').classList.toggle('on', l==='en');
+  document.getElementById('btn-zh').classList.toggle('on', l==='zh');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const v = I18N[l][el.dataset.i18n]; if(v!==undefined) el.innerHTML = v;
+  });
+  ['qc1','qo1','qc2','qo2','qc3','qo3'].forEach(id=>{
+    const el=document.getElementById(id); const v=I18N[l][id]; if(v!==undefined) el.innerHTML=v;
+  });
+  document.title = l==='zh' ? 'gate-ops — 无闸门，不启航。' : 'gate-ops — No gate, no ship.';
+  const btn=document.getElementById('gateBtn'),pid=document.getElementById('planId');
+  const isIdle = btn.textContent.indexOf('plan')>=0 || btn.textContent.indexOf('计划')>=0 && btn.textContent.indexOf('生成中')<0;
+  if(isIdle || btn.textContent.indexOf('planning')>=0 || btn.textContent.indexOf('计划生成中')>=0){
+    if(!btn.disabled || btn.textContent.indexOf(I18N[l].tPlanning)>=0) btn.textContent=I18N[l].btnPlan;
+  }
+  if(btn.textContent.indexOf('released')>=0 || btn.textContent.indexOf('发布完成')>=0) btn.textContent=I18N[l].tReleased;
+  if(pid.classList.contains('show')) pid.textContent=I18N[l].tWait;
+  renderThreat(l);
+}
+let threatCls='A';
+function renderThreat(l){
+  const t=I18N[l].tm;
+  document.querySelector('[data-i18n="tmKick"]').textContent=t.kick;
+  document.querySelector('[data-i18n="tmH2"]').textContent=t.h2;
+  document.querySelector('[data-i18n="tmSub"]').textContent=t.sub;
+  document.querySelector('[data-i18n="tmFull"]').textContent=t.full;
+  document.querySelector('[data-i18n="tmLink"]').textContent=t.link;
+  const tabs=document.getElementById('tmTabs'),panels=document.getElementById('tmPanels');
+  tabs.innerHTML='';panels.innerHTML='';
+  Object.keys(t.cls).forEach(k=>{
+    const b=document.createElement('button');
+    b.className='tab'+(k===threatCls?' on':'');b.textContent=t.cls[k][0];
+    b.onclick=()=>{threatCls=k;renderThreat(l);};
+    tabs.appendChild(b);
+    if(k===threatCls){
+      const panel=document.createElement('div');
+      panel.className='threat-panel on';
+      panel.innerHTML=t.cls[k][1].map(it=>
+        '<div class="threat-item"><div class="t-scen"><span class="lbl">⚠ SCENARIO / 场景</span>'+it[0]+'</div><div class="t-gate"><span class="lbl">🚧 GATE / 闸门</span>'+it[1]+'</div></div>'
+      ).join('');
+      panels.appendChild(panel);
+    }
+  });
+}
+function switchThreat(k){threatCls=k;renderThreat(LANG);}
+let pipelineRunning=false;
+function runPipeline(){
+  if(pipelineRunning) return;
+  const btn=document.getElementById('gateBtn'),pid=document.getElementById('planId');
+  pipelineRunning=true;btn.disabled=true;btn.textContent=I18N[LANG].tPlanning;
+  pid.classList.remove('show');pid.textContent='';
+  ['s1','s2','s3','s4','s5'].forEach(s=>document.getElementById(s).classList.remove('on','wait'));
+  ['l1','l2','l3','l4'].forEach(l=>document.getElementById(l).classList.remove('on'));
+  const stages=['s1','s2','s3','s4','s5'],links=['l1','l2','l3','l4'];
+  const waitAt=1;
+  stages.forEach((s,i)=>setTimeout(()=>{
+    const el=document.getElementById(s);
+    if(i===waitAt){
+      el.classList.add('on','wait');pid.textContent=I18N[LANG].tWait;pid.classList.add('show');
+      setTimeout(()=>{el.classList.remove('wait');
+        if(links[i-1])document.getElementById(links[i-1]).classList.add('on');
+      },1800);
+    } else {
+      el.classList.add('on');
+      if(links[i-1])document.getElementById(links[i-1]).classList.add('on');
+    }
+    if(i===stages.length-1){
+      btn.textContent=I18N[LANG].tReleased;btn.disabled=false;pipelineRunning=false;
+    }
+  },i*1100));
+}
+setLang(LANG);
+</script>
+</body>
+</html>
