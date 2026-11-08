@@ -1,0 +1,20 @@
+{
+  "name": "@wisediag/dsh-tool-gate-ops",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "description": "gate-ops × dsh：发版闸门薄桥接工具插件。闸门判定权仍在 gate-ops 真源 shell，插件只提供身份锚定/两段式确认/脱敏/留痕与只读 RPC 数据源。",
+  "license": "MIT",
+  "exports": {
+    ".": { "default": "./lib/index.js" },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-tools": "workspace:^"
+  }
+}

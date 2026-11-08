@@ -1,0 +1,14 @@
+# @wisediag/dsh-tool-gate-ops — cordis 挂载配置样例
+# 所有路径均为占位符，部署前必须替换为真实值；配置注入优先于环境变量。
+# gateOpsRoot 必须指向包含 scripts/gateo-*.sh 的 gate-ops 真源根目录。
+# home 必须与 dsh-tool-gate-ops-loop 的 home 一致，双方共用 evidenceDir / bridge.jsonl。
+# loopSourceRoot 用于「测试后源码被改动」的哈希复核（E_BINDING_MISMATCH）。
+# recordEnabled 保持默认 false：步骤 4 由 gateops_loop_record 显式补录，不做隐式串联。
+- insert:
+    - id: dsh-tool-gate-ops
+      name: '@wisediag/dsh-tool-gate-ops'
+      config:
+        gateOpsRoot: '/path/to/gate-ops'
+        home: '/path/to/dsh-home'
+        timeoutMs: 120000
+        loopSourceRoot: '/path/to/project'

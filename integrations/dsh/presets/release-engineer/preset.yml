@@ -1,0 +1,4 @@
+name: GateOps 研发闭环岗
+description: DSH 主导的四步研发闭环：按项目白名单改本地源码 → 本地端到端浏览器测试 → DSH 发令 → GateOps 记录版本。只做编排与留痕，发版判定权归 gate-ops 真源。
+order: 6
+role: release-engineer

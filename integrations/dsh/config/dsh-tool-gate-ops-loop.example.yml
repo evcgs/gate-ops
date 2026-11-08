@@ -1,0 +1,18 @@
+# @wisediag/dsh-tool-gate-ops-loop — cordis 挂载配置样例
+# 项目白名单与测试套件一律由用户按项目显式登记；默认空 = fail-closed。
+# home 必须与 @wisediag/dsh-tool-gate-ops 一致，双方共用同一 evidenceDir / bridge.jsonl。
+# suites 的每一项是 [解释器, 脚本绝对路径]，不接受工具入参指定任意命令。
+# demo-project / sites-e2e 均为示例名，请替换为你自己的项目与套件。
+- insert:
+    - id: dsh-tool-gate-ops-loop
+      name: '@wisediag/dsh-tool-gate-ops-loop'
+      config:
+        gateOpsRoot: '/path/to/gate-ops'
+        home: '/path/to/dsh-home'
+        timeoutMs: 600000
+        projectRoots:
+          demo-project: '/path/to/project'
+        suites:
+          sites-e2e:
+            - '/bin/bash'
+            - '/path/to/project/sites-e2e.sh'

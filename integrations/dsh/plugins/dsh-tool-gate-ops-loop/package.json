@@ -1,0 +1,20 @@
+{
+  "name": "@wisediag/dsh-tool-gate-ops-loop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "description": "003 · DSH Agent 四步研发闭环：按项目白名单编辑源码、长时浏览器 E2E、生成 append-only 测试证据、转发 GateOps 台账写入。不做任何发版判定。",
+  "license": "MIT",
+  "exports": {
+    ".": { "default": "./lib/index.js" },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-tools": "workspace:^"
+  }
+}
