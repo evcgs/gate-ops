@@ -7,20 +7,13 @@
 
 - **2026-11-03：release-deploy → gate-ops**（用户裁定）。定位语：**流程为路、闸门为门、证据为痕**——闸门驱动的发版运维（No gate, no ship）。同步动作：目录/主文件 name/描述、三端软链重建（~/.workbuddy、~/.claude、~/.codex）、全库引用替换、真实链路回归（precheck 只读预检 ✔ / rollback list ✔ / build-index ✔）。
 
-## [Unreleased] — 2026-11-08
+## [3.4.0] — 2026-11-09
 
-### Added（integrations/dsh · DeepSeek Harness 代码级集成快照）
+### Added（DSH Agent 四步研发闭环 + 窗口编排 + 部署守卫）
 
-- **新增 `integrations/dsh/`**：把「能力可以下放给 Agent，能不能发版不能」落成可开源的代码。含 2 个工具插件、1 个岗位预设、2 个真源证据脚本、2 套可复跑验证矩阵与 4 份说明文档
-- **测试证据硬前置（FR-04）**：`core.js` 的 `plan()` / `apply()` 两个唯一入口调用 `evidenceCheck()`；无有效 E2E 证据直接拒绝，绕过 persona 直调工具同样被拦，不设关闭开关
-- **三层判定权**：原子能力（插件）→ 证据准入（`gateo-evidence-verify.sh`）→ 发版放行（真源 `_approval.sh::gateo_load_plan`）。JS 侧不重写任何闸门判定，避免双实现漂移
-- **不采信自报**：`loop.js` 的 `test()` 只认真实进程退出码与 `GATEO_TEST_RESULT` 结构化输出；证据 30 分钟过期，与项目 / 源码哈希 / 计划范围摘要三重绑定
-- **负例矩阵 N-1~N-6 × A/B 双路径 `16/0`**；全量矩阵连跑 2 次全绿（001 自测 `41/0`、003 四步 `14/0`、能力验证 `14/14 ×2`、面板 E2E `10/0 ×2`，聚合门禁 `24/6` 不劣化）；真源既有 diff 0 字节
-- **发布副本全程按 `processes/publish.md` 脱敏**：宽词表终检 0 命中，`.bak` / backup / 凭据文件零携带，配置样例只留占位符；逐项差异见 `integrations/dsh/SANITIZATION.md`
-
-> 边界：该集成是**可选受控通道**，不是全局拦截器；服务器端强制未实装，不得切 `enforce`。
-
----
+- **003 四步研发闭环**：`scripts/gateo-evidence-verify.sh`（测试证据准入校验 + append-only 证据 seal）、`scripts/gateo-record-append.sh`（发版台账显式补录，操作 agent=DSH）
+- **002 窗口编排**：`scripts/gateo-window-open.sh` / `gateo-window-close.sh` / `gateo-window-selftest.sh`（临时开窗凭证签发，默认关闭）
+- **deploy-guard**：`scripts/deploy-guard.sh` + `integrations/deploy-guard/`（部署守卫）
 
 ## [3.3.0] — 2026-11-04
 

@@ -84,7 +84,7 @@ const REDACT_RULES = [
   ["SECRET", /\b(?:sk-|ghp_|gho_|AKIA|xox[baprs]-)[A-Za-z0-9_\-]{8,}\b/g],
   ["ASSIGN", /\b(api[_-]?key|token|secret|password|passwd|credential|private[_-]?key)\s*[:=]\s*[^\s,;"']+/gi],
   ["HOST", /\b[a-z0-9][a-z0-9-]{1,}\.(?:com|cn|net|org|io|local|internal|lan|test)\b/gi],
-  ["KEYPATH", /[\w./~-]*(?:\.pem|id_rsa|id_ed25519|\.key)\b/g],
+  ["KEYPATH", /[\w./~-]*(?:\.pem|id_rsa|id_ed2551[0-9]|\.key)\b/g],
   ["SSHPATH", /\b(?:ssh|scp)\s+[^\s]+@[^\s]+/gi],
   ["ABSPATH", /\/Users\/[^\s"'`,;)]+/g],
   ["ABSPATH", /\/home\/[^\s"'`,;)]+/g],
