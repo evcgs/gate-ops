@@ -13,6 +13,7 @@
 | `audit.md` | 审计回执 / 复核报告 | 回执（第一行身份声明） | 审计是**只读**过程：报告即终点，不得自动转入 release/onboarding |
 | `hotfix.md` | 线上故障 / 业务 bug | 根因结论 + 范围化修复 + 验证留痕 | 紧急回滚先走 rollback.md；前向修复走 release.md |
 | `publish.md` | 对外发布：开源 GitHub / 官网 / 公众号 / 交付物脱敏 | 发布后独立复审 0 命中 + 发布台账行 | 对外发布=一次发版；脱敏映射表是可审计产物；发布≠宣传（宣传是新任务） |
+| `runtime-upgrade.md` | 服务器运行时升级：PHP / 语言 / 软件包源码重编译 | 版本校验通过 + 全站回归通过 + 台账行 | 备份按变更对象（BACKUP_TARGETS）+ 版本校验（VERSION_*）；复用 release 的 plan→confirm→apply |
 
 ## 入口解耦铁律（independent entry points）
 

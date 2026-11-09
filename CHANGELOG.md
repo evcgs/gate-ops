@@ -7,6 +7,15 @@
 
 - **2026-11-03：release-deploy → gate-ops**（用户裁定）。定位语：**流程为路、闸门为门、证据为痕**——闸门驱动的发版运维（No gate, no ship）。同步动作：目录/主文件 name/描述、三端软链重建（~/.workbuddy、~/.claude、~/.codex）、全库引用替换、真实链路回归（precheck 只读预检 ✔ / rollback list ✔ / build-index ✔）。
 
+## [3.5.0] — 2026-11-09
+
+### Added（服务器运行时升级支持 · runtime-upgrade）
+
+- **第 8 个过程剧本 `processes/runtime-upgrade.md`**：PHP/语言/软件包源码重编译的专项流程——只读核查 → 按变更对象备份 → 长耗时后台编译 → 版本校验 → `/index.php` 回归 → 台账
+- **`BACKUP_TARGETS`**：备份按变更对象（空格分隔绝对路径），设了则覆盖 RSYNC_DEST 备份——修复「改 php.ini 却备份了 RSYNC_DEST 小目录」的失配
+- **`VERSION_CHECK_CMD` + `VERSION_EXPECT`**：编译后版本校验，实际 ≠ 期望即判失败——修复「7.4.34 实际 7.4.33 才发现」的镜像标签漂移
+- deploy-backend.sh：custom 模式新增版本校验步骤；备份 echo 支持按变更对象展示
+
 ## [3.4.0] — 2026-11-09
 
 ### Added（DSH Agent 四步研发闭环 + 窗口编排 + 部署守卫）

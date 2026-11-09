@@ -1,6 +1,6 @@
 ---
 name: gate-ops
-description: 闸门驱动的通用发版/回滚技能（面向 AI Agent 设计）。当用户要求发布、部署、上线、发版、回滚前端或后端服务，或排查"健康检查失败/发版覆盖云端新代码/丢功能"问题时使用；也可说"用 gate-ops 发版/验收/回滚"。核心机制：三段式发版（gateo-plan 生成计划 → 用户确认计划 ID → gateo-apply 指纹校验后执行，确认闸门密码学强制）+ 八阶段生命周期（preflight→plan→approval→backup→apply→readiness→acceptance→ledger/memory）+ 闸门体系（发版锁防并发带心跳、备份 sha256 三重校验、验收闭环是记忆硬闸门）+ 证据中心。覆盖：前端构建发布、后端多模式发布（container-sync/compose-build/process/custom）与多机集群滚动发布、多环境标注（prod/staging/dev）、凭据集中存档（~/.gateo/credentials.sh，敏感信息不入库不入对话且输出自动脱敏）、发版前置检查（防旧码覆盖云端 + 防丢功能标记 + 期望差异清单）、云端自动备份、精确快照回滚、健康检查失败甄别（启动预热自动延长观察）、浏览器 E2E 验收、发版后三层记忆写入协议。
+description: 闸门驱动的通用发版/回滚技能（面向 AI Agent 设计）。当用户要求发布、部署、上线、发版、回滚前端或后端服务，或排查"健康检查失败/发版覆盖云端新代码/丢功能"问题时使用；也可说"用 gate-ops 发版/验收/回滚"。核心机制：三段式发版（gateo-plan 生成计划 → 用户确认计划 ID → gateo-apply 指纹校验后执行，确认闸门密码学强制）+ 八阶段生命周期（preflight→plan→approval→backup→apply→readiness→acceptance→ledger/memory）+ 闸门体系（发版锁防并发带心跳、备份 sha256 三重校验、验收闭环是记忆硬闸门）+ 证据中心。覆盖：前端构建发布、后端多模式发布（container-sync/compose-build/process/custom）与多机集群滚动发布、多环境标注（prod/staging/dev）、凭据集中存档（~/.gateo/credentials.sh，敏感信息不入库不入对话且输出自动脱敏）、发版前置检查（防旧码覆盖云端 + 防丢功能标记 + 期望差异清单）、云端自动备份、精确快照回滚、健康检查失败甄别（启动预热自动延长观察）、浏览器 E2E 验收、发版后三层记忆写入协议、服务器运行时升级（runtime-upgrade：PHP/语言/软件包源码重编译，按变更对象备份 + 版本校验 + 长耗时后台编译）。
 argument-hint: "[admin|h5|all|backend|rollback ...]"
 ---
 
@@ -121,7 +121,7 @@ PROJECT=project-a bash scripts/rollback.sh frontend admin       # 前端最近�
 
 ## 任务入口与解耦（processes/，v3.2.0 起）
 
-七类过程各有独立入口与终点（剧本见 `processes/`）：**release**（发版，core）/ **rollback**（回滚）/ **onboarding**（接入与复核）/ **data-change**（内容级变更）/ **audit**（审计复核，只读）/ **hotfix**（线上故障前向修复）/ **publish**（对外发布与脱敏：GitHub 开源、官网、公众号、交付物——对外发布本质是一次发版，脱敏映射表是可审计产物，发布后独立复审是强制终点）。
+八类过程各有独立入口与终点（剧本见 `processes/`）：**release**（发版，core）/ **rollback**（回滚）/ **onboarding**（接入与复核）/ **data-change**（内容级变更）/ **audit**（审计复核，只读）/ **hotfix**（线上故障前向修复）/ **publish**（对外发布与脱敏：GitHub 开源、官网、公众号、交付物）/ **runtime-upgrade**（服务器运行时升级：PHP/语言/软件包源码重编译——按变更对象备份 + 版本校验 + 长耗时后台编译，复用 release 的 plan→confirm→apply）。
 
 - **入口解耦**：每个过程有自己的终点；过程产出到下一个过程的转化**必须由用户指令发起**——审计回执 ≠ 自动进入发版，接入完成 ≠ 自动发版，回滚成功 ≠ 自动修复。agent 不得以"顺手做完了"为由跨越过程边界。
 - **跨过程衔接**在 `processes/README.md` 注册表中维护（如：hotfix 的前向修复走 release 链路；数据订正走 data-change）。
@@ -213,7 +213,7 @@ preflight → plan → approval → backup → apply → readiness → acceptanc
 ## 深入参考
 
 - `lifecycle/00-overview.md` ~ `08-memory.md`：八阶段生命周期手册（状态机 + 每阶段决策手册）
-- `processes/README.md`：过程剧本注册表（release/rollback/onboarding/data-change/audit/hotfix 六入口 + 入口解耦铁律）
+- `processes/README.md`：过程剧本注册表（release/rollback/onboarding/data-change/audit/hotfix/publish/runtime-upgrade 八入口 + 入口解耦铁律）
 - `integrations/README.md`：宿主集成层（workbuddy/claude/codex/generic/dsh，一键装配 `scripts/gateo-init.sh`）
 - `references/environment.md`：销售培训系统服务器拓扑、端口占用、强隔离铁律（动服务器前必读）
 - `references/mac-traps.md`：macOS/bash 3.2 环境陷阱清单（改脚本前必读：多字节变量、BSD grep、pipefail 竞态、tar mtime、zsh EXIT trap 等）

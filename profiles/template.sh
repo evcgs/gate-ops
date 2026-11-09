@@ -50,6 +50,9 @@ RSYNC_DEST="/www/wwwroot/your-project/app"     # rsync 目标，必须在 PROJEC
 DEPLOY_RELOAD_CMD=""                           # process 模式: 服务重载命令，如
                                                # "systemctl restart myapp" 或 "pm2 reload myapp"
 DEPLOY_CUSTOM_CMD=""                           # custom 模式: 服务器上执行的发布命令（不得硬编码密钥）
+BACKUP_TARGETS=""                             # 备份按变更对象（空格分隔绝对路径）；设了则覆盖 RSYNC_DEST 备份（runtime-upgrade 用）
+VERSION_CHECK_CMD=""                            # 版本校验：输出实际版本的命令（如 php -r 'echo PHP_VERSION;'）
+VERSION_EXPECT=""                               # 版本校验：期望版本号；与 VERSION_CHECK_CMD 输出不一致则 fail
 
 # ---- 多机滚动（可选，仅 container-sync / process 模式）----
 # 设为空格分隔的多台服务器列表（同集群同配置），发布时逐台 备份→发布→重启→健康检查，

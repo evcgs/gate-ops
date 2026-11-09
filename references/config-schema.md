@@ -39,9 +39,19 @@ SSH 主机校验强制启用。`known_hosts` 通过可信渠道的指纹预先�
 | `container-sync` | `CONTAINER`、`BUILD_SRC` | 构建源与容器目标都可版本化/完整恢复 |
 | `compose-build` | `PROJECT_DIR`、`RSYNC_DEST` | `RSYNC_DEST` 严格位于 `PROJECT_DIR` 之下，且**不含运行时数据**（见下方 bind mount 检查项） |
 | `process` | `RSYNC_DEST`、`DEPLOY_RELOAD_CMD` | 目标目录纯代码；重载命令幂等 |
-| `custom` | `PROJECT_DIR`、`DEPLOY_CUSTOM_CMD` | 自定义命令须自行实现备份、执行、就绪、精确回滚四项契约 |
+| `custom` | `PROJECT_DIR`、`DEPLOY_CUSTOM_CMD` | 自定义命令须自行实现备份、执行、就绪、精确回滚四项契约；可选 `BACKUP_TARGETS`（按变更对象备份）+ `VERSION_CHECK_CMD`/`VERSION_EXPECT`（版本校验） |
 
 所有云端路径必须是非 `/` 的绝对路径。参与 `--delete` 同步的目录**绝不能含数据库、上传文件、生成状态、密钥或用户数据**。
+
+## 服务器运行时升级（runtime-upgrade）字段（v3.5.0 起）
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `BACKUP_TARGETS` | 空格分隔绝对路径 | 备份对象（按变更对象）；设了则覆盖 RSYNC_DEST 的备份源 |
+| `VERSION_CHECK_CMD` | 命令 | 输出实际版本号（如 `php -r 'echo PHP_VERSION;'`） |
+| `VERSION_EXPECT` | 字符串 | 期望版本号；与 VERSION_CHECK_CMD 输出不一致则判失败 |
+
+三者均为可选：空值 = 不启用（对既有发版零影响）。用于 PHP/语言/软件包源码重编译场景，配合 `processes/runtime-upgrade.md`。
 
 ## ⚠️ 本地源码必须 git 管理（多会话协作前提，接入必查项）
 

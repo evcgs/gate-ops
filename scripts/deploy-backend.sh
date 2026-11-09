@@ -279,6 +279,13 @@ deploy_one_target() {
 
     BK_PARENT=$(dirname "$RSYNC_DEST")
     BK_BASE=$(basename "$RSYNC_DEST")
+    # BACKUP_TARGETS（按变更对象）优先：覆盖备份源为指定绝对路径（逐个去前导 /）
+    # 用于 runtime-upgrade 等「服务器组件升级」——备份真正被改的文件，而非 RSYNC_DEST
+    if [[ -n "${BACKUP_TARGETS:-}" ]]; then
+        BK_PARENT="/"
+        BK_BASE=""
+        for _p in $BACKUP_TARGETS; do BK_BASE="$BK_BASE ${_p#/}"; done
+    fi
 
     # ---- 第0.5步: 云端备份（无备份不发版；每份备份带 sha256/dirfp 真实性凭据）----
     echo "💾 第0.5步: 云端现状备份（模式: ${RUN_MODE}）..."
@@ -298,7 +305,11 @@ deploy_one_target() {
         echo "  备份: $BACKUP_DIR/gateo_backend_app_bak_$TS.tar.gz（构建源）"
         echo "        $BACKUP_DIR/gateo_backend_container_bak_$TS.tar.gz（容器）"
     else
-        echo "  备份: $BACKUP_DIR/gateo_backend_src_bak_$TS.tar.gz（源码目录 ${RSYNC_DEST}）"
+        if [[ -n "${BACKUP_TARGETS:-}" ]]; then
+            echo "  备份: $BACKUP_DIR/gateo_backend_src_bak_$TS.tar.gz（变更对象: ${BACKUP_TARGETS}）"
+        else
+            echo "  备份: $BACKUP_DIR/gateo_backend_src_bak_$TS.tar.gz（源码目录 ${RSYNC_DEST}）"
+        fi
         [[ "$RUN_MODE" == "compose-build" ]] && echo "        $BACKUP_DIR/gateo_backend_images_$TS.txt（当前镜像 ID 列表）"
     fi
     ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" "cat $BACKUP_DIR/gateo_backend_app_bak_$TS.tar.gz.sha256 $BACKUP_DIR/gateo_backend_container_bak_$TS.tar.gz.sha256 $BACKUP_DIR/gateo_backend_src_bak_$TS.tar.gz.sha256 2>/dev/null" | sed "s/^/  备份SHA256[$TSV]: /" || true
@@ -398,6 +409,18 @@ deploy_one_target() {
             ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" "$DEPLOY_CUSTOM_CMD && echo '  ✅ 自定义发布命令执行完成'"
             ;;
     esac
+
+    # ---- 版本校验（可选；runtime-upgrade 场景）----
+    # VERSION_CHECK_CMD 输出实际版本，VERSION_EXPECT 为期望值；不一致即判失败（防"版本号没到目标"）
+    if [[ -n "${VERSION_CHECK_CMD:-}" ]]; then
+        local _actual_ver
+        _actual_ver=$(ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" "$VERSION_CHECK_CMD" 2>/dev/null) || _actual_ver=""
+        if [[ -n "${VERSION_EXPECT:-}" && "$_actual_ver" != "$VERSION_EXPECT" ]]; then
+            echo "❌ [$TSV] 版本校验失败：期望 ${VERSION_EXPECT}，实际 ${_actual_ver:-<无输出>}"
+            exit 1
+        fi
+        echo "  ✅ 版本校验通过: ${_actual_ver}"
+    fi
 
     # ---- 第2步: 重启 + 健康检查（探活方式随模式适配；失败=发版失败）----
     # ⚠️ container-sync 模式必须显式 docker restart——代码已同步进容器但旧进程仍在内存里，
