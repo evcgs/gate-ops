@@ -3,7 +3,7 @@
 wait_for_file() {
     local file="$1" i=0
     while [[ ! -f "$file" && "$i" -lt 100 ]]; do
-        project-c 0.05
+        sleep 0.05
         i=$((i + 1))
     done
     [[ -f "$file" ]]
@@ -15,7 +15,7 @@ test_active_lock_cannot_be_reaped_by_ttl() {
     base="$d/locks"
     ready="$d/ready"
     DEPLOY_LOCK_DIR="$base" PROJECT=lock-test DEPLOY_LOCK_TTL=0 \
-        bash -c 'source "$1"; acquire_lock; touch "$2"; project-c 3' _ \
+        bash -c 'source "$1"; acquire_lock; touch "$2"; sleep 3' _ \
         "$TEST_ROOT/scripts/_lock.sh" "$ready" &
     holder=$!
     wait_for_file "$ready" || { kill "$holder" 2>/dev/null || true; fail "holder never acquired lock"; }

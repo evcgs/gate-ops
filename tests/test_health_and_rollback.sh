@@ -24,7 +24,7 @@ test_http_500_is_unhealthy() {
     tar czf "$backup" -C "$d/src" app
     sha256sum "$backup" > "$backup.sha256"
     write_passthrough_ssh "$mocks"
-    make_mock "$mocks" project-c 'exit 0'
+    make_mock "$mocks" sleep 'exit 0'
     make_mock "$mocks" curl \
         'for arg in "$@"; do' \
         '  case "$arg" in -f|--fail|--fail-with-body) exit 22 ;; esac' \
@@ -63,7 +63,7 @@ test_rollback_restores_exact_tree() {
     tar czf "$backup" -C "$d/snapshot" app
     sha256sum "$backup" > "$backup.sha256"
     write_passthrough_ssh "$mocks"
-    make_mock "$mocks" project-c 'exit 0'
+    make_mock "$mocks" sleep 'exit 0'
     make_mock "$mocks" curl 'echo "{\"ok\":true}"' 'exit 0'
     profile="$d/profile.sh"
     cat > "$profile" <<EOF

@@ -443,7 +443,7 @@ deploy_one_target() {
 
     local HEALTH="FAILED" i
     for i in $(seq 1 "$DEPLOY_HEALTH_RETRIES"); do
-        project-c "$DEPLOY_HEALTH_INTERVAL"
+        sleep "$DEPLOY_HEALTH_INTERVAL"
         if HEALTH=$(probe "$TSV" 2>/dev/null); then
             echo "  ✅ 第 $i 次探活成功: $HEALTH"
             break
@@ -471,7 +471,7 @@ deploy_one_target() {
         if [[ "$SVC_RUNNING" == "true" || "$SVC_RUNNING" =~ ^[0-9]+$ && "$SVC_RUNNING" -gt 0 ]]; then
             echo "   服务进程仍在运行 → 疑似启动预热（初始化慢），自动延长观察 60s（12 次×5s）..."
             for j in $(seq 1 12); do
-                project-c 5
+                sleep 5
                 if HEALTH=$(probe "$TSV" 2>/dev/null); then
                     echo "  ✅ 延长观察第 $j 次探活成功: $HEALTH"
                     echo "  ℹ️  本次发版实际成功——首轮失败属启动预热误判，台账备注请记录：预热延长观察通过"

@@ -172,7 +172,7 @@ case "$CMD" in
             run_ssh "set -e; find $BUILD_SRC/app -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +; tar xzf $bak -C $BUILD_SRC; tar czf - -C $BUILD_SRC app | docker exec -i $CONTAINER sh -c 'rm -rf /app/app && cd /app && tar xzf -'; docker restart $CONTAINER"
         fi
         echo "⏳ 等待健康检查..."
-        project-c 8
+        sleep 8
         if probe "$BAK_TYPE"; then
             echo "✅ 后端已回滚且健康检查通过"
         else

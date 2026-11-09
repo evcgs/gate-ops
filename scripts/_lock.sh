@@ -76,7 +76,7 @@ acquire_lock() {
     (
         while [[ -d "$LOCK_DIR" ]] && [[ "$(cut -d'|' -f1 "$LOCK_DIR/owner" 2>/dev/null)" == "$LOCK_NONCE" ]]; do
             touch "$LOCK_DIR/heartbeat" 2>/dev/null || exit 0
-            project-c "$LOCK_HEARTBEAT_INTERVAL"
+            sleep "$LOCK_HEARTBEAT_INTERVAL"
         done
     ) &
     LOCK_HEARTBEAT_PID=$!
