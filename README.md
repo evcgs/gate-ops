@@ -2,7 +2,7 @@
 
 **Gate-driven release operations for AI coding agents.** _No gate, no ship._
 
-[![Version](https://img.shields.io/badge/version-3.2.0-0F6E56)](CHANGELOG.md) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Tests](https://img.shields.io/badge/tests-11%2F11-3B6D11)](tests/) [![Language](https://img.shields.io/badge/language-bash--3.2+-444)](#) [![Docs](https://img.shields.io/badge/docs-gh--pages-534AB7)](docs/index.html)
+[![Version](https://img.shields.io/badge/version-3.4.0-0F6E56)](CHANGELOG.md) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![Tests](https://img.shields.io/badge/tests-11%2F11-3B6D11)](tests/) [![Language](https://img.shields.io/badge/language-bash--3.2+-444)](#) [![Docs](https://img.shields.io/badge/docs-gh--pages-534AB7)](docs/index.html)
 
 > [!TIP]
 > 🇨🇳 中文文档：[README.zh-CN.md](README.zh-CN.md)
@@ -34,7 +34,7 @@ Prompt-based discipline ("please be careful when deploying") fails exactly when 
 - **Multi-project profiles** — one repo operates many systems on shared servers with strict isolation (ports, containers, directories).
 - **Redacted credentials** — server IPs and keys live only in `~/.gateo/credentials.sh` (chmod 600, never committed). Receipts and logs show `<server>`, never addresses.
 
-## Six processes, independent entry points
+## Seven processes, independent entry points
 
 Borrowed from spec-kit's process-presets idea — each process has its own entry, gates and *endpoint*; crossing a process boundary always requires an explicit user instruction.
 
@@ -46,6 +46,7 @@ Borrowed from spec-kit's process-presets idea — each process has its own entry
 | `data-change` | Database content changes, bulk generation | `gateo_data_*` backup + ledger row |
 | `audit` | Read-only audits & reviews | Receipt — *never* auto-advances to release |
 | `hotfix` | Live bug: assess cause → scoped fix → record verification | Root cause + fix + regression check |
+| `publish` | Open-source / external release with desensitization | Post-publish review passed + ledger row |
 
 See [`processes/README.md`](processes/README.md).
 
@@ -53,7 +54,7 @@ See [`processes/README.md`](processes/README.md).
 
 ```bash
 # 1. Install (links the repo into your agent's skills dir)
-bash scripts/gateo-init.sh --integration workbuddy   # or claude / codex / generic
+bash scripts/gateo-init.sh --integration workbuddy   # or claude / codex / generic / dsh
 bash scripts/gateo-init.sh --list                    # see all integrations
 
 # 2. Onboard your first project (five-stage guided flow)
@@ -86,6 +87,7 @@ Same philosophy as spec-kit's `specify init`: **one source of truth + a thin ada
 | `claude` | Claude Code | ✅ |
 | `codex` | Codex CLI | ✅ (+ auto AGENTS.md hint) |
 | `generic` | any agent | ✅ escape hatch |
+| `dsh` | DeepSeek Harness | ✅ code-level integration (evidence-gated release; see [integrations/dsh](integrations/dsh/README.md)) |
 
 Adding an integration is intentionally cheap — a path, an optional post-install hint, and a self-check. PRs welcome; our goal is a catalog as wide as spec-kit's 38.
 
@@ -118,7 +120,7 @@ gate-ops/
 ├── profiles/              # per-project machine configs (template + examples)
 ├── records/               # cross-agent shared release ledger
 ├── scripts/               # gateo-plan / gateo-apply / precheck / rollback / doctor / init / tests
-├── integrations/          # per-host adapters (workbuddy / claude / codex / generic)
+├── integrations/          # per-host adapters (workbuddy / claude / codex / generic / dsh)
 ├── tests/                 # 11 behavioral tests (tamper, TTL, redaction, rollback…)
 └── docs/                  # GitHub Pages site
 ```

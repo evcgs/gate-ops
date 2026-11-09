@@ -214,7 +214,7 @@ preflight → plan → approval → backup → apply → readiness → acceptanc
 
 - `lifecycle/00-overview.md` ~ `08-memory.md`：八阶段生命周期手册（状态机 + 每阶段决策手册）
 - `processes/README.md`：过程剧本注册表（release/rollback/onboarding/data-change/audit/hotfix 六入口 + 入口解耦铁律）
-- `integrations/README.md`：宿主集成层（workbuddy/claude/codex/generic，一键装配 `scripts/gateo-init.sh`）
+- `integrations/README.md`：宿主集成层（workbuddy/claude/codex/generic/dsh，一键装配 `scripts/gateo-init.sh`）
 - `references/environment.md`：销售培训系统服务器拓扑、端口占用、强隔离铁律（动服务器前必读）
 - `references/mac-traps.md`：macOS/bash 3.2 环境陷阱清单（改脚本前必读：多字节变量、BSD grep、pipefail 竞态、tar mtime、zsh EXIT trap 等）
 - `references/browser-e2e.md`：浏览器端到端验收规程（E2E_MODE 三档配置、三端能力前置检查与安装路径、截图留证流程）

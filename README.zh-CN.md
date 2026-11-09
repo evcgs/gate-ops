@@ -32,7 +32,7 @@ AI 编码 Agent 写代码很强，把代码发砸也"很强"：`rsync --delete` 
 - **多项目档案**：一个仓库运维同机多系统，端口/容器/目录强隔离。
 - **脱敏凭据**：服务器 IP 与密钥只存 `~/.gateo/credentials.sh`（600，永不入库）；回执与日志只见 `<server>`。
 
-## 六个过程，独立入口
+## 七个过程，独立入口
 
 借鉴 spec-kit 的 process-presets：每个过程有独立入口、闸门与**终点**；跨越过程边界必须由用户显式指令发起。
 
@@ -44,6 +44,7 @@ AI 编码 Agent 写代码很强，把代码发砸也"很强"：`rsync --delete` 
 | `data-change` | 数据库内容变更 / 批量生成 | `gateo_data_*` 备份 + 台账行 |
 | `audit` | 只读审计 / 复核 | 回执——**绝不**自动转入发版 |
 | `hotfix` | 线上 bug：根因评估 → 范围化修复 → 验证留痕 | 根因 + 修复 + 回归检查 |
+| `publish` | 对外发布 / 开源发布 / 公众号发布（脱敏） | 发布后复审通过 + 台账行 |
 
 详见 [`processes/README.md`](processes/README.md)。
 
@@ -51,7 +52,7 @@ AI 编码 Agent 写代码很强，把代码发砸也"很强"：`rsync --delete` 
 
 ```bash
 # 1. 安装（软链进 agent 的技能目录）
-bash scripts/gateo-init.sh --integration workbuddy   # 或 claude / codex / generic
+bash scripts/gateo-init.sh --integration workbuddy   # 或 claude / codex / generic / dsh
 bash scripts/gateo-init.sh --list                    # 查看全部集成
 
 # 2. 接入第一个项目（五阶段引导）
@@ -84,6 +85,7 @@ bash tests/run.sh                                    # 11 项行为测试
 | `claude` | Claude Code | ✅ |
 | `codex` | Codex CLI | ✅（自动追加 AGENTS.md 指引） |
 | `generic` | 任意 agent | ✅ 逃生门 |
+| `dsh` | DeepSeek Harness | ✅ 代码级集成（证据闸门发版；见 integrations/dsh/） |
 
 新增一个集成的成本被刻意压到最低——一个路径、一条可选的后置提示、一项自检。欢迎 PR；目标是对齐 spec-kit 的 38 个集成广度。
 
@@ -116,7 +118,7 @@ gate-ops/
 ├── profiles/              # 项目档案（template + 示例）
 ├── records/               # 跨 agent 共享发版台账
 ├── scripts/               # gateo-plan / apply / precheck / rollback / doctor / init / tests
-├── integrations/          # 宿主适配（workbuddy / claude / codex / generic）
+├── integrations/          # 宿主适配（workbuddy / claude / codex / generic / dsh）
 ├── tests/                 # 11 项行为测试（防篡改、有效期、脱敏、回滚…）
 └── docs/                  # GitHub Pages 站点
 ```
