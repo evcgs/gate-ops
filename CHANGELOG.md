@@ -22,6 +22,10 @@
 - **通用 IP 终检**：终检新增通用 IPv4 类别检测与具体值白名单（8 个值 / 22 处），白名单外一律中止并报出文件 + 行；真实公网出口 IP 与内网网关在导出层泛化为 `<client-ip>` / `<gateway>`，真源保留原值。
 - **脱敏文档口径**：`integrations/dsh/SANITIZATION.md` §1 / §3 / §4 / §5 与实测扫描结果对齐。
 
+### Added（DSH 集成 · 只读观测面板回灌 · 2026-11-10）
+
+- **`integrations/dsh/plugins/dsh-client-ui-gate-ops/`**：DSH 右侧只读观测面板（4 文件：`cordis.patch.yml`、`package.json`、`lib/client.js`、`lib/index.js`），此前仅存在于 DSH 运行实例，现回灌真源并随导出包发布；`README.md` 补装配说明与 `GATEOPS_ROOT` 注入提示，`SANITIZATION.md` 补脱敏口径。判定逻辑与判定权归属不变，闸门仍归真源 shell。
+
 ## [3.4.0] — 2026-11-09
 
 ### Added（DSH Agent 四步研发闭环 + 窗口编排 + 部署守卫）

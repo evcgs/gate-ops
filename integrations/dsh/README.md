@@ -2,9 +2,9 @@
 
 > **能力可以下放给 Agent，「能不能发版」不能。**
 >
-> 本目录是 gate-ops 在 DSH（DeepSeek Harness）工作台上的完整接入代码：两个工具插件、一个岗位预设、两个真源证据脚本，以及可复跑的验证矩阵。
+> 本目录是 gate-ops 在 DSH（DeepSeek Harness）工作台上的完整接入代码：两个工具插件、一个只读观测面板、一个岗位预设、两个真源证据脚本，以及可复跑的验证矩阵。
 >
-> 版本基线：gate-ops `3.3.0` · 集成快照 `2026-11-08` · 状态：**可用，但为可选受控通道**（见「边界」）
+> 版本基线：gate-ops `3.5.0` · 集成快照 `2026-11-10` · 状态：**可用，但为可选受控通道**（见「边界」）
 
 ---
 
@@ -38,6 +38,7 @@ const ev = evidenceCheck("plan", p);
 |---|---|
 | `plugins/dsh-tool-gate-ops/` | 001 主插件：7 个工具（4 只读 / 3 写入且两段式确认）、G1~G8 约束层、`test-gateops.mjs` |
 | `plugins/dsh-tool-gate-ops-loop/` | 003 四步闭环插件：3 个原子工具、路径白名单、证据生成、append-only 台账 |
+| `plugins/dsh-client-ui-gate-ops/` | 只读观测面板：DSH 右侧内联抽屉 + host 侧 Remote service（2026-11-10 回灌） |
 | `presets/release-engineer/` | 「GateOps 研发闭环岗」persona：只做编排与留痕，不写任何判定逻辑 |
 | `scripts/gateo-evidence-verify.sh` | 真源：测试证据准入（`seal` / `plan` / `apply` 三模式，fail-closed） |
 | `scripts/gateo-record-append.sh` | 真源：台账 append-only 追加 + 聚合索引重建 |
@@ -70,9 +71,10 @@ const ev = evidenceCheck("plan", p);
 > 本目录是**源码快照**，不是 DSH 的自动发现目录；需按宿主机制挂载两个插件。
 
 ```bash
-# 1. 把两个插件放到 DSH 的 plugin/ 下（或软链）
+# 1. 把三个插件放到 DSH 的 plugin/ 下（或软链）
 ln -s "$PWD/plugins/dsh-tool-gate-ops"      "$DSH_ROOT/plugin/@wisediag/dsh-tool-gate-ops"
 ln -s "$PWD/plugins/dsh-tool-gate-ops-loop" "$DSH_ROOT/plugin/@wisediag/dsh-tool-gate-ops-loop"
+ln -s "$PWD/plugins/dsh-client-ui-gate-ops" "$DSH_ROOT/plugin/@wisediag/dsh-client-ui-gate-ops"
 
 # 2. 把两个证据脚本并入真源 scripts/（或让 gateOpsRoot 指向包含它们的目录）
 cp scripts/gateo-evidence-verify.sh "$GATEOPS_ROOT/scripts/" && chmod +x "$GATEOPS_ROOT/scripts/gateo-evidence-verify.sh"
@@ -98,6 +100,8 @@ cp config/dsh-tool-gate-ops-loop.example.yml "$DSH_ROOT/plugin/@wisediag/dsh-too
 | `GATEOPS_DSH_PLUGIN` | `index.js` 绝对路径（仅负例脚本用） | `/path/to/dsh/plugin/.../index.js` |
 
 所有路径也可通过 `cordis.patch.yml` 的 `config` 注入，优先级高于环境变量。
+
+> 只读观测面板的 host 侧调用 `createCore({ home })`，只传 `home`，`gateOpsRoot` 取自 `DEFAULT_ROOT`。使用本发布副本须注入 `GATEOPS_ROOT`（或由宿主配置传入），否则该面板返回 `GATEOPS_ROOT_UNAVAILABLE`。
 
 ---
 

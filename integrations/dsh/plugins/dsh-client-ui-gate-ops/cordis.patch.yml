@@ -1,0 +1,6 @@
+# @wisediag/dsh-client-ui-gate-ops — 客户端面板 entry（id 全局唯一）
+# host 侧导出 Typert Remote service 类，client 侧注册 gateops 面板内容组件。
+- insert:
+    - id: client-ui-gate-ops
+      name: '@wisediag/dsh-client-ui-gate-ops'
+      config: {}
