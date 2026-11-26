@@ -445,11 +445,18 @@ deploy_one_target() {
                 # 取一个真实资源 URL，Content-Type 必须是 JS/CSS，否则判失败。
                 if [[ -n "${FRONTEND_CHECK_ASSET:-}" ]]; then
                     echo "🔍 静态资源 MIME 校验: ${FRONTEND_CHECK_ASSET}"
-                    local FE_MIME
-                    FE_MIME=$(ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" \
-                        "curl -s -m 8 -o /dev/null -w '%{content_type}' '${FRONTEND_CHECK_ASSET}'" 2>/dev/null) || FE_MIME=""
+                    # docker restart 后服务需数秒就绪，首轮 curl 可能返回空。
+                    # 重试 8 次×3s（24s），避免把"启动中"误判为"落 SPA catch-all"。
+                    local FE_MIME="" fe_i
+                    for fe_i in $(seq 1 8); do
+                        FE_MIME=$(ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" \
+                            "curl -s -m 8 -o /dev/null -w '%{content_type}' '${FRONTEND_CHECK_ASSET}'" 2>/dev/null) || FE_MIME=""
+                        if echo "$FE_MIME" | grep -qE 'javascript|text/css'; then break; fi
+                        FE_MIME=""
+                        sleep 3
+                    done
                     if ! echo "$FE_MIME" | grep -qE 'javascript|text/css'; then
-                        echo "❌ 静态资源 MIME 校验失败：${FRONTEND_CHECK_ASSET} 返回 '${FE_MIME:-<空>}'，疑似落到 SPA catch-all（dist 恢复后未重启进程）导致前端白屏"
+                        echo "❌ 静态资源 MIME 校验失败：${FRONTEND_CHECK_ASSET} 重试 8 次仍返回 '${FE_MIME:-<空>}'，疑似落到 SPA catch-all（dist 恢复后未重启进程）导致前端白屏"
                         exit 1
                     fi
                     echo "  ✅ 静态资源 MIME 正常: ${FE_MIME}"

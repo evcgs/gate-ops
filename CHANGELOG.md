@@ -7,6 +7,10 @@
 
 - **2026-11-03：release-deploy → gate-ops**（用户裁定）。定位语：**流程为路、闸门为门、证据为痕**——闸门驱动的发版运维（No gate, no ship）。同步动作：目录/主文件 name/描述、三端软链重建（~/.workbuddy、~/.claude、~/.codex）、全库引用替换、真实链路回归（precheck 只读预检 ✔ / rollback list ✔ / build-index ✔）。
 
+### Fixed（静态资源 MIME 校验重试）
+
+- MIME 校验在 `docker restart` 后立即执行可能取到空值（服务未就绪）→ 假失败。改为重试 8 次×3s，区分"启动中"与真正的 SPA catch-all 白屏。
+
 ### Added（静态资源 MIME 校验 · 可选）
 
 - **`FRONTEND_CHECK_ASSET`**：custom 模式可选配一个静态资源 URL，校验响应 Content-Type 必须是 javascript/text/css。防止恢复 web/dist 后未在文件就位时重启进程——进程仍按启动时目录状态决定是否 mount `/assets`，导致资源落到 SPA catch-all 返回 index.html（text/html）、浏览器白屏。
