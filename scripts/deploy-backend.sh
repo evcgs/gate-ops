@@ -439,6 +439,21 @@ deploy_one_target() {
                     fi
                     echo "  ✅ 根路径返回前端内容"
                 fi
+                # 静态资源 MIME 校验（可选，档案配 FRONTEND_CHECK_ASSET 才启用）：
+                # dist 恢复后若未在文件就位后重启，进程仍按启动时的空目录状态运行，
+                # /assets/* 落到 SPA catch-all 返回 index.html（text/html）→ 浏览器白屏。
+                # 取一个真实资源 URL，Content-Type 必须是 JS/CSS，否则判失败。
+                if [[ -n "${FRONTEND_CHECK_ASSET:-}" ]]; then
+                    echo "🔍 静态资源 MIME 校验: ${FRONTEND_CHECK_ASSET}"
+                    local FE_MIME
+                    FE_MIME=$(ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" \
+                        "curl -s -m 8 -o /dev/null -w '%{content_type}' '${FRONTEND_CHECK_ASSET}'" 2>/dev/null) || FE_MIME=""
+                    if ! echo "$FE_MIME" | grep -qE 'javascript|text/css'; then
+                        echo "❌ 静态资源 MIME 校验失败：${FRONTEND_CHECK_ASSET} 返回 '${FE_MIME:-<空>}'，疑似落到 SPA catch-all（dist 恢复后未重启进程）导致前端白屏"
+                        exit 1
+                    fi
+                    echo "  ✅ 静态资源 MIME 正常: ${FE_MIME}"
+                fi
             fi
             ;;
     esac
