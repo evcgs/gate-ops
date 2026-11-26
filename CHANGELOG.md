@@ -7,6 +7,17 @@
 
 - **2026-11-03：release-deploy → gate-ops**（用户裁定）。定位语：**流程为路、闸门为门、证据为痕**——闸门驱动的发版运维（No gate, no ship）。同步动作：目录/主文件 name/描述、三端软链重建（~/.workbuddy、~/.claude、~/.codex）、全库引用替换、真实链路回归（precheck 只读预检 ✔ / rollback list ✔ / build-index ✔）。
 
+## [3.6.0] — 2026-11-26
+
+### Added（前端入口校验 · custom 模式）
+
+- **`FRONTEND_CHECK_PATH` + `FRONTEND_CHECK_URL`**：custom 模式在自定义发布命令执行后、健康检查之前，校验静态入口 `index.html` 存在且根路径未返回「前端尚未构建」兜底 JSON。防止 `frontend.tar` 层级错（多包一层 `dist/`，解成 `web/dist/dist/index.html`）造成上线后前端 503 却仍被判发版成功。配置即启用，不配不影响既有项目。
+
+### Fixed（探活与连接稳定性）
+
+- **`_ssh_pool.sh` 集成**：deploy-backend / precheck / rollback 启动时自动建 ControlMaster 主连接复用，消除密集新建 SSH 握手被中间链路限流导致的 `kex_exchange_identification: Connection reset by peer`（默认开启，`GATEO_SSH_POOL=0` 可关）。
+- **rsync 排除 `test-results/`**：避免测试产物进入备份/同步范围。
+
 ## [3.5.0] — 2026-11-09
 
 ### Added（服务器运行时升级支持 · runtime-upgrade）

@@ -12,6 +12,7 @@ for suite in \
     "$TEST_DIR/test_frontend_and_redaction.sh" \
     "$TEST_DIR/test_health_and_rollback.sh" \
     "$TEST_DIR/test_lock.sh" \
+    "$TEST_DIR/test_ssh_pool.sh" \
     "$TEST_DIR/test_config.sh"
 do
     # shellcheck disable=SC1090

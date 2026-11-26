@@ -45,7 +45,7 @@ E2E 行为是**项目固有属性**，登记在项目档案 `profiles/<项目>.s
    （与 gateo-deploy-output.txt、gateo-acceptance-report.md 同目录，一次发版一套证据；路径写入验收报告与台账"证据"列）
 4. **强刷复验**（Cmd/Ctrl+Shift+R 或清缓存）：防"页面仍加载旧 chunk"——与 05-acceptance
    的前端 SPA 最低验收标准（index.html chunk 核对）配合，构成"引用正确 + 渲染正确"双证明
-5. 涉及登录态/角色差异的变更（如普通用户端 vs 管理端），用对应角色账号各验一次
+5. 涉及登录态/角色差异的变更（如学员端 vs 管理端），用对应角色账号各验一次
 
 ## Agent 检查点
 

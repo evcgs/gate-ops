@@ -3,7 +3,7 @@
 #
 # 部署位置: ~/.gateops/deploy-guard.sh (0700)
 # authorized_keys 追加行:
-#   command="<HOME>/.gateops/deploy-guard.sh" ssh-ed25519 AAAA... gateops-project-compose-shadow
+#   command="<HOME>/.gateops/deploy-guard.sh" ssh-ed25519 AAAA... gateops-aidailyreport-shadow
 #
 # 运行形态: sshd 的 forced command 会忽略客户端命令，把它放进 SSH_ORIGINAL_COMMAND。
 #   因此控制子命令用固定前缀分流（精确前缀匹配，不做命令语义解析、不做部署命令白名单）：

@@ -8,7 +8,7 @@
 - 读用户提供的部署档案/回执；无则现场收集（服务器 compose/Dockerfile、容器状态、健康端点、目录结构、本地源码位置）
 - **bind mount 数据安全预判**：列出全部持久化路径，判定是否在 RSYNC_DEST/BUILD_SRC 之内（细节见 `references/config-schema.md` 接入 checklist）
 
-## 阶段 2 · P0 数据安全检查（project-b 事故教训，不可跳过）
+## 阶段 2 · P0 数据安全检查（mkis 事故教训，不可跳过）
 
 按 config-schema 五步 checklist 走完：列持久化路径 → 逐个判定 → 处置（移出 / 确认排除覆盖）→ precheck 干跑验证数据目录不在差异清单 → 写进项目文档。
 改过共享脚本必须重跑 `tests/run.sh`（11 项全过）。

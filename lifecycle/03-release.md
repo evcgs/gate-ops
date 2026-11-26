@@ -23,7 +23,7 @@ PROJECT=<名> bash scripts/gateo-plan.sh backend           # 或 frontend admin|
 
 ```markdown
 确认发版后端吗？（计划 ID：<plan-id>，有效期 30 分钟）
-- 目标：myapp-backend（container-sync）
+- 目标：speech-training-backend（container-sync）
 - 将覆盖云端：routes.py、topics_service.py 等 3 个文件（= 期望发版清单）
 - 备份：脚本将自动云端备份（sha256+现场指纹校验，无有效备份不覆盖），文件名发版后回填台账
 回复确认后执行；想先看差异就回复"先不发版"。
@@ -54,9 +54,9 @@ PROJECT=<名> bash scripts/gateo-apply.sh <计划文件路径> <计划ID>
 
 | 模式 | 状态 | 典型场景 | 发布动作 | 本方资产例子 |
 |---|---|---|---|---|
-| `static` | ✅ 已实现 | 前端静态站 | 构建 → tar/rsync 到 Nginx 目录 | project-a admin/h5 |
+| `static` | ✅ 已实现 | 前端静态站 | 构建 → tar/rsync 到 Nginx 目录 | sales admin/h5 |
 | `container-sync` | ✅ 已实现（backend 默认） | 容器常驻，代码直灌 | rsync 构建源 → 容器先清后灌 → restart | 销售培训系统 |
-| `compose-build` | ✅ 已实现（v3） | compose 项目，改代码要重构建 | rsync 源码到 RSYNC_DEST → `cd PROJECT_DIR && $COMPOSE_CMD up -d --build` | 内容型项目、服务型系统、project-c |
+| `compose-build` | ✅ 已实现（v3） | compose 项目，改代码要重构建 | rsync 源码到 RSYNC_DEST → `cd PROJECT_DIR && $COMPOSE_CMD up -d --build` | 日报系统、健康风险、sleep |
 | `custom` | ✅ 已实现（v3） | 万能兜底 | 服务器上执行档案 `DEPLOY_CUSTOM_CMD` | 兜底 |
 | `process` | ✅ 已实现（v2.1） | 无容器，进程管理器托管 | rsync 源码到 RSYNC_DEST → 执行档案 `DEPLOY_RELOAD_CMD`（`pm2 reload` / `systemctl restart`） | 传统 Node/Python 主机 |
 | `git-archive` | ⏸ 预留（roadmap B-1） | 服务器连不上 git（国内常态） | 本地 `git archive <tag> \| ssh tar xf`，tag 为版本基准可追溯 | 本服务器适合 |
@@ -74,7 +74,7 @@ PROJECT=<名> bash scripts/gateo-apply.sh <计划文件路径> <计划ID>
 - 每台服务器的 IP/密钥登记在 `~/.gateo/credentials.sh`（或档案 `GATEO_CRED_FILE` 指定的凭据文件），多机时凭据文件内定义多个 `CRED_*_SERVER` 变量，档案把变量拼进 `DEPLOY_TARGETS`
 - 版本一致性：滚动完成后必须抽查**每一台**的健康检查输出（脚本已逐台打印），台账目标列记录全部目标
 
-接入 compose 型项目（如内容型项目）在 A 实现前的临时做法：预检/备份/台账/记忆照常使用，发布动作由 agent 按该项目既定命令执行并在台账备注实际命令。
+接入 compose 型项目（如日报系统）在 A 实现前的临时做法：预检/备份/台账/记忆照常使用，发布动作由 agent 按该项目既定命令执行并在台账备注实际命令。
 
 ## 失败处置（按退出码分流）
 

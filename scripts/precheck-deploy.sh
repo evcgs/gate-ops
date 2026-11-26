@@ -57,6 +57,11 @@ SSH_OPTS="${SSH_OPTS:--o StrictHostKeyChecking=accept-new -o BatchMode=yes}"
 SERVER="${DEPLOY_SERVER:-${SERVER:-}}"
 [[ -n "$SERVER" ]] || { echo "❌ 未配置目标服务器——项目档案引用的凭据变量缺失？检查 ~/.gateo/credentials.sh 的 CRED_<项目>_SERVER"; exit 2; }
 [[ -n "$SSH_KEY" ]] || { echo "❌ 未配置 SSH_KEY，拒绝执行无法确定身份的预检"; exit 2; }
+# SSH 连接复用：被 deploy 脚本调用时 SSH_OPTS 已带 ControlPath，本脚本直接复用；
+# 独立运行时自行建连（详见 _ssh_pool.sh）。
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/_ssh_pool.sh"
+ssh_pool_init
 REDACT_SED=()
 for _t in "$SERVER" ${DEPLOY_TARGETS:-}; do
     _host="${_t#*@}"
@@ -87,7 +92,7 @@ check_backend() {
         --exclude='.git' --exclude='node_modules' \
         --exclude='*.bak*' \
         --exclude='.env' --exclude='.env.public' \
-        --exclude='data/' --exclude='.runtime/' --exclude='.venv-verify/' --exclude='.pytest-tmp/' --exclude='.pytest_cache/' --exclude='.specify/' --exclude='web/' --exclude='.local/' --exclude='backups/' --exclude='recovery/' --exclude='DEPLOYMENT-CREDENTIALS.txt' --exclude='.local-settings' \
+        --exclude='data/' --exclude='.runtime/' --exclude='.venv-verify/' --exclude='.pytest-tmp/' --exclude='.pytest_cache/' --exclude='.specify/' --exclude='web/' --exclude='.local/' --exclude='backups/' --exclude='recovery/' --exclude='test-results/' --exclude='DEPLOYMENT-CREDENTIALS.txt' --exclude='.local-settings' \
         -e "ssh -i $SSH_KEY $SSH_OPTS" \
         "$tsv:$CLOUD_APP/" "$local_app/" 2>"$errfile")
     rc=$?

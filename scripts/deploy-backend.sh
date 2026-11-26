@@ -76,6 +76,11 @@ SSH_OPTS="${SSH_OPTS:--o StrictHostKeyChecking=accept-new -o BatchMode=yes}"
 SERVER="${DEPLOY_SERVER:-${SERVER:-}}"
 [[ -n "$SERVER" ]] || { echo "❌ 未配置目标服务器——项目档案引用的凭据变量缺失？检查 ~/.gateo/credentials.sh 的 CRED_<项目>_SERVER"; exit 2; }
 [[ -n "$SSH_KEY" ]] || { echo "❌ 未配置 SSH_KEY；为避免错误选择默认身份，拒绝发版"; exit 2; }
+# SSH 连接复用：消除密集新建握手被中间链路限流（详见 _ssh_pool.sh）
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/_ssh_pool.sh"
+ssh_pool_init
+export SSH_OPTS   # 子进程 precheck-deploy.sh 继承后复用同一主连接
 BACKUP_DIR="${DEPLOY_BACKUP_DIR:-${BACKUP_DIR:-}}"
 BACKUP_KEEP="${DEPLOY_KEEP:-${BACKUP_KEEP:-20}}"
 LOCAL_APP_DIR="${DEPLOY_APP_DIR:-${LOCAL_APP_DIR:-$SCRIPT_DIR/app}}"
@@ -376,7 +381,7 @@ deploy_one_target() {
                 --exclude='.git' --exclude='node_modules' --exclude='__pycache__' \
                 --exclude='*.pyc' --exclude='._*' --exclude='.env' \
                 --exclude='*.bak*' \
-                --exclude='data/' --exclude='.runtime/' --exclude='.venv-verify/' --exclude='.pytest-tmp/' --exclude='.pytest_cache/' --exclude='.specify/' --exclude='web/' --exclude='.local/' --exclude='backups/' --exclude='recovery/' --exclude='DEPLOYMENT-CREDENTIALS.txt' --exclude='.local-settings' --exclude='.env.public' \
+                --exclude='data/' --exclude='.runtime/' --exclude='.venv-verify/' --exclude='.pytest-tmp/' --exclude='.pytest_cache/' --exclude='.specify/' --exclude='web/' --exclude='.local/' --exclude='backups/' --exclude='recovery/' --exclude='test-results/' --exclude='DEPLOYMENT-CREDENTIALS.txt' --exclude='.local-settings' --exclude='.env.public' \
                 -e "ssh -i $SSH_KEY $SSH_OPTS" \
                 "$LOCAL_APP_DIR/" "$TSV:$RSYNC_DEST/"
             echo "  ✅ 源码已更新（与本地完全一致；.env 与运行时数据目录 data/ 未被触碰）"
@@ -393,7 +398,7 @@ deploy_one_target() {
                 --exclude='.git' --exclude='node_modules' --exclude='__pycache__' \
                 --exclude='*.pyc' --exclude='._*' --exclude='.env' \
                 --exclude='*.bak*' \
-                --exclude='data/' --exclude='.runtime/' --exclude='.venv-verify/' --exclude='.pytest-tmp/' --exclude='.pytest_cache/' --exclude='.specify/' --exclude='web/' --exclude='.local/' --exclude='backups/' --exclude='recovery/' --exclude='DEPLOYMENT-CREDENTIALS.txt' --exclude='.local-settings' --exclude='.env.public' \
+                --exclude='data/' --exclude='.runtime/' --exclude='.venv-verify/' --exclude='.pytest-tmp/' --exclude='.pytest_cache/' --exclude='.specify/' --exclude='web/' --exclude='.local/' --exclude='backups/' --exclude='recovery/' --exclude='test-results/' --exclude='DEPLOYMENT-CREDENTIALS.txt' --exclude='.local-settings' --exclude='.env.public' \
                 -e "ssh -i $SSH_KEY $SSH_OPTS" \
                 "$LOCAL_APP_DIR/" "$TSV:$RSYNC_DEST/"
             echo "  ✅ 源码已更新（与本地完全一致；.env 与运行时数据目录 data/ 未被触碰）"
@@ -407,6 +412,34 @@ deploy_one_target() {
             echo "🚀 第1步: 执行自定义发布命令"
             echo "   命令: ${DEPLOY_CUSTOM_CMD}"
             ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" "$DEPLOY_CUSTOM_CMD && echo '  ✅ 自定义发布命令执行完成'"
+
+            # 前端入口强制校验（可选，档案配 FRONTEND_CHECK_PATH 才启用）：
+            # custom 模式前端靠 DEPLOY_CUSTOM_CMD 里的 tar 解包，若 tar 层级错
+            # （如误打 dist/index.html），会解成 web/dist/dist/index.html，
+            # 根路径 503「前端尚未构建」。这里在健康检查
+            # 之前先拦住：入口文件必须存在，且根路径返回 HTML 而非 JSON 报错。
+            if [[ -n "${FRONTEND_CHECK_PATH:-}" ]]; then
+                echo "🔍 前端入口校验: ${FRONTEND_CHECK_PATH}"
+                local FE_OK
+                FE_OK=$(ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" \
+                    "test -f ${FRONTEND_CHECK_PATH}/index.html && echo FILE_OK || echo FILE_MISSING" 2>/dev/null) || FE_OK="SSH_FAIL"
+                if [[ "$FE_OK" != "FILE_OK" ]]; then
+                    echo "❌ 前端入口校验失败：${FRONTEND_CHECK_PATH}/index.html 不存在（结果=${FE_OK}）"
+                    echo "   常见原因：frontend.tar 层级错（多包一层 dist/），解包后变成 dist/dist/index.html"
+                    exit 1
+                fi
+                echo "  ✅ index.html 存在"
+                if [[ -n "${FRONTEND_CHECK_URL:-}" ]]; then
+                    local FE_BODY
+                    FE_BODY=$(ssh $SSH_OPTS -i "$SSH_KEY" "$TSV" \
+                        "curl -s -m 8 '${FRONTEND_CHECK_URL}' | head -c 120" 2>/dev/null) || FE_BODY=""
+                    if echo "$FE_BODY" | grep -q '前端尚未构建\|npm run build'; then
+                        echo "❌ 前端入口校验失败：根路径返回「前端尚未构建」JSON，部署无效"
+                        exit 1
+                    fi
+                    echo "  ✅ 根路径返回前端内容"
+                fi
+            fi
             ;;
     esac
 

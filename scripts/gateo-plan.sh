@@ -43,7 +43,7 @@ TMP_PLAN=$(mktemp "$PLAN_DIR/.gateo-plan.XXXXXX")
 
 EXPECTED_DIFFS="${DEPLOY_EXPECT_DIFFS:-}"
 
-# —— 内嵌 precheck 只读干跑（v3.1.1，2026-11-04 project-a 实录教训）——
+# —— 内嵌 precheck 只读干跑（v3.1.1，2026-11-04 sales 实录教训）——
 # 目的：把文件级差异清单直接呈进计划，让"确认覆盖资产"落到具体文件，
 # 避免用户确认一次 → apply 时 precheck 发现未声明差异 → 被迫二次 plan。
 # 只读、不部署；precheck 失败不阻塞计划生成（apply 前置检查仍会硬校验）。

@@ -35,7 +35,7 @@ deep_scan() {
         if [[ -z "$mf" ]]; then
             echo "WARN $name: MARKERS_FILE 未配置"
         elif [[ ! -f "$mf" ]]; then
-            echo "FAIL $name: MARKERS_FILE 引用的文件不存在（档案已引用但文件缺失，project-b 复核实录教训）"
+            echo "FAIL $name: MARKERS_FILE 引用的文件不存在（档案已引用但文件缺失，mkis 复核实录教训）"
         elif ! grep -qEv '^[[:space:]]*(#|$)' "$mf" 2>/dev/null; then
             echo "WARN $name: MARKERS_FILE 存在但为空（无有效标记）"
         else
@@ -66,7 +66,7 @@ deep_scan() {
         if git -C "$_repo" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
             _dirty=$(git -C "$_repo" status --porcelain | grep -E "profiles/${name}[.-]|records/${name}\.md|feature-markers-${name}\.txt" || true)
             if [[ -n "$_dirty" ]]; then
-                echo "WARN $name: 仓库存在本项目未提交产物（归属漂移信号，project-compose/project-c 实录教训）：$(printf '%s\n' "$_dirty" | wc -l | tr -d ' ') 个文件"
+                echo "WARN $name: 仓库存在本项目未提交产物（归属漂移信号，aidailyreport/sleep 实录教训）：$(printf '%s\n' "$_dirty" | wc -l | tr -d ' ') 个文件"
             fi
         fi
     )

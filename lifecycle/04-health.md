@@ -11,7 +11,7 @@
 ## 操作手册
 
 - backend：deploy 流程内置——首轮每 3s 探活一次、默认 10 次（30s，可用档案 `DEPLOY_HEALTH_RETRIES`/`DEPLOY_HEALTH_INTERVAL` 调整）。**优先用 `READINESS_URL`/`READINESS_CMD`，未配置回退 `HEALTH_URL`/`HEALTH_CMD`**；HTTP 探活自动 fail-on-error（任何 4xx/5xx 判失败，v3.1 修复了"连上 500 也算成功"的漏洞）
-- **失败甄别（内置，2026-11-03 内容型项目实录驱动）**：首轮失败且服务进程仍在运行（compose-build 查 `compose ps`、container-sync 查 `docker inspect`）→ 自动延长观察 60s（12 次×5s）——容器重建后的启动预热（会话恢复/缓存加载）可能超过首轮窗口，属**探活时序误判**，不是代码故障；延长后通过 = 发版成功，台账备注记"预热延长观察通过"
+- **失败甄别（内置，2026-11-03 日报系统实录驱动）**：首轮失败且服务进程仍在运行（compose-build 查 `compose ps`、container-sync 查 `docker inspect`）→ 自动延长观察 60s（12 次×5s）——容器重建后的启动预热（会话恢复/缓存加载）可能超过首轮窗口，属**探活时序误判**，不是代码故障；延长后通过 = 发版成功，台账备注记"预热延长观察通过"
 - frontend：deploy-frontend.sh 发布后校验远端 `index.html` 存在
 - 补充探查（health 通过但行为可疑时）：
   ```bash

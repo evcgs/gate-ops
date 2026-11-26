@@ -85,6 +85,9 @@ acquire_lock() {
 }
 
 release_lock() {
+    # 先清理 SSH 主连接（本脚本 acquire_lock 的 trap 会覆盖 _ssh_pool 注册的 trap，
+    # 故在此主动调用；函数不存在时 no-op）。
+    declare -F ssh_pool_cleanup >/dev/null 2>&1 && ssh_pool_cleanup
     [[ -n "${LOCK_HEARTBEAT_PID:-}" ]] && kill "$LOCK_HEARTBEAT_PID" 2>/dev/null || true
     [[ -n "${LOCK_HEARTBEAT_PID:-}" ]] && wait "$LOCK_HEARTBEAT_PID" 2>/dev/null || true
     if [[ -n "${LOCK_NONCE:-}" && "$(cut -d'|' -f1 "$LOCK_DIR/owner" 2>/dev/null)" == "$LOCK_NONCE" ]]; then

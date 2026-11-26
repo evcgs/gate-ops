@@ -20,18 +20,18 @@ argument-hint: "[admin|h5|all|backend|rollback ...]"
 source ~/.gateo/credentials.sh && ssh -i "$CRED_MYAPP_SSH_KEY" "$CRED_MYAPP_SERVER" "docker ps" | head -3
 
 # 第1步·生成发版计划（只读，永不部署；输出计划摘要 + 确认 ID，有效期默认 30 分钟）
-PROJECT=project-a bash scripts/gateo-plan.sh backend           # 后端
-PROJECT=project-a bash scripts/gateo-plan.sh frontend admin    # 前端 admin|h5|all
+PROJECT=sales bash scripts/gateo-plan.sh backend           # 后端
+PROJECT=sales bash scripts/gateo-plan.sh frontend admin    # 前端 admin|h5|all
 
 # 第2步·把计划摘要呈给用户确认（目标/模式/变更资产/回滚点 + 计划 ID），拿到明确同意后：
-PROJECT=project-a bash scripts/gateo-apply.sh <计划文件路径> <用户确认的计划ID>
+PROJECT=sales bash scripts/gateo-apply.sh <计划文件路径> <用户确认的计划ID>
 #    apply 内部校验配置指纹与源码指纹——计划生成后任何一方被改动即拒绝执行
 # ⚠️ 直接跑 deploy-backend.sh / deploy-frontend.sh 会被硬拒绝（提示缺少发版计划）——这是设计，不是故障
 
 # 回滚（不受计划闸门限制；真故障回滚越快越好）
-PROJECT=project-a bash scripts/rollback.sh list
-PROJECT=project-a bash scripts/rollback.sh backend              # 最近一次备份
-PROJECT=project-a bash scripts/rollback.sh frontend admin       # 前端最近备份
+PROJECT=sales bash scripts/rollback.sh list
+PROJECT=sales bash scripts/rollback.sh backend              # 最近一次备份
+PROJECT=sales bash scripts/rollback.sh frontend admin       # 前端最近备份
 ```
 
 连通性自检失败时的排查顺序：key 文件存在且权限 600？→ 服务器地址对？→ 有没有多个 key（`ls ~/.ssh/`）需要 `-i` 显式指定？确认通了再进发版流程。
@@ -40,9 +40,9 @@ PROJECT=project-a bash scripts/rollback.sh frontend admin       # 前端最近�
 
 配置加载优先级：`DEPLOY_CONF=/path/x.sh` > `PROJECT=<名>`（读 `profiles/<名>.sh`）> `DEPLOY_*` 环境变量 > 内置默认。
 
-- 内置档案：`profiles/project-a.sh`（销售培训系统）、`profiles/project-compose.sh`（AI 内容型项目）
+- 内置档案：`profiles/sales.sh`（销售培训系统）、`profiles/aidailyreport.sh`（AI 日报系统）
 - 新项目接入：`cp profiles/template.sh profiles/<新项目名>.sh` 并填写（发布模式、环境标注、容器、构建源、路径、就绪/健康探活、功能标记文件），然后跑 `bash scripts/gateo-doctor.sh` 做离线体检（配置契约详见 `references/config-schema.md`），**无需改任何脚本**
-- ⚠️ **compose-build / process 模式接入必查 bind mount**：运行时数据目录（数据库/上传/密钥）若位于 RSYNC_DEST 之内，`rsync --delete` 会删生产数据——接入 checklist 见 `references/config-schema.md` 的"Bind mount 与运行时数据"节（project-b 事故教训）
+- ⚠️ **compose-build / process 模式接入必查 bind mount**：运行时数据目录（数据库/上传/密钥）若位于 RSYNC_DEST 之内，`rsync --delete` 会删生产数据——接入 checklist 见 `references/config-schema.md` 的"Bind mount 与运行时数据"节（mkis 事故教训）
 - 技能自带行为测试：`bash tests/run.sh`（11 项：审批防篡改/脱敏/精确回滚/锁驱逐等），改脚本后必须全过
 
 ## 凭据与安全（集中存档约定）
@@ -90,20 +90,22 @@ PROJECT=project-a bash scripts/rollback.sh frontend admin       # 前端最近�
 | `DEPLOY_BACKUP_DIR` / `DEPLOY_KEEP` | 备份目录 / 保留份数（默认 20） |
 | `DEPLOY_EVIDENCE_DIR` | 证据目录（设置后脚本全程输出自动留档 `gateo-deploy-output.txt`） |
 | `E2E_MODE` | 浏览器 E2E 档位临时覆盖（auto/always/off，单次发版有效） |
+| `GATEO_SSH_POOL` | SSH 连接复用开关（默认 1=自动建 ControlMaster 主连接，消除密集新建握手被中间链路限流；0=关闭）。用户显式在 `SSH_OPTS` 带 ControlPath/ControlMaster 时不重复注入 |
 | `FORCE=1` | ⛔ 跳过前置检查，见下方铁律 |
 
 ## Agent 行为铁律（必须遵守）
 
-0. **身份锚定（先于一切动作）**：接入/复核/审计/发版任务的目标系统**只能来自用户当前消息的明确指定**。历史记忆、台账记录、技能文档提及（如"project-b P0 教训"）、端口占用、同机其他系统等线索**只能用于验证用户指定的系统，绝不能用于推断或指派任务**（2026-11-04 实录教训：某会话因任务书未写系统名，凭记忆自行推断成 project-b 并执行了整套复核）。候选系统为零个或多个、或与你的记忆冲突时，**必须先询问用户**，得到明确答复后才能开工。开工第一行输出：`本次系统=<X>（依据：用户指定/用户确认）`。
+0. **身份锚定（先于一切动作）**：接入/复核/审计/发版任务的目标系统**只能来自用户当前消息的明确指定**。历史记忆、台账记录、技能文档提及（如"mkis P0 教训"）、端口占用、同机其他系统等线索**只能用于验证用户指定的系统，绝不能用于推断或指派任务**（2026-11-04 实录教训：某会话因任务书未写系统名，凭记忆自行推断成 mkis 并执行了整套复核）。候选系统为零个或多个、或与你的记忆冲突时，**必须先询问用户**，得到明确答复后才能开工。开工第一行输出：`本次系统=<X>（依据：用户指定/用户确认）`。
 
 1. **禁止自行使用 `FORCE=1`**。前置检查未通过 = 发现了真实风险，你必须把差异清单完整报告给用户，等用户明确说出"强制发版"或"跳过检查"后才能加 `FORCE=1`。网络/SSH 故障导致的检查失败同样禁止用 FORCE 绕过——先修连通性。
    **例行发版不需要 FORCE**：差异=本次待发内容是常态，在确认闸门里与用户确认期望差异清单后，用 `DEPLOY_EXPECT_DIFFS="文件1,文件2"` 传入发版命令，预检会校验"实际差异 ⊆ 期望清单"后放行；只有出现**清单外**差异或用户明确授权跳过全部检查时才允许 FORCE=1（用 FORCE 的发版，台账备注必须记录原因与用户确认）。
-   **⚠️ 路径基准（2026-11-04 project-b 实录教训）**：`DEPLOY_EXPECT_DIFFS` 的路径**相对 LOCAL_APP_DIR**，即 precheck 差异清单的原样路径；**不是 git 仓库根的路径**——两者经常不同（如 git 内 `app/app/api/auth.py` = 差异清单里的 `app/api/auth.py`）。直接从 precheck 差异清单复制，不要从 git status 换算。`DEPLOY_EXPECT_DIFFS` 必须在 **gateo-plan 时**传入（写入计划 manifest，apply 自动携带），不是 apply 时才加。
+   **⚠️ 路径基准（2026-11-04 mkis 实录教训）**：`DEPLOY_EXPECT_DIFFS` 的路径**相对 LOCAL_APP_DIR**，即 precheck 差异清单的原样路径；**不是 git 仓库根的路径**——两者经常不同（如 git 内 `app/app/api/auth.py` = 差异清单里的 `app/api/auth.py`）。直接从 precheck 差异清单复制，不要从 git status 换算。`DEPLOY_EXPECT_DIFFS` 必须在 **gateo-plan 时**传入（写入计划 manifest，apply 自动携带），不是 apply 时才加。
+   **SSH kex reset（2026-11-20 已内置修复）**：若遇 `kex_exchange_identification: Connection reset by peer`，根因是本地到服务器链路的中间设备对**高频新建 SSH 连接限流**（受控实验：快速新建 30 次失败 14 次、间隔 1 秒失败 4/15、ControlMaster 复用 30 次 0 失败）。现已由 `scripts/_ssh_pool.sh` 自动建主连接复用（默认开启，`GATEO_SSH_POOL=0` 可关），无需手动传 SSH_OPTS。**不要为此用 FORCE**——盲目重试不降低失败率（频率不降），且失败发生在覆盖前不影响线上；确认线上未被触碰后直接重试即可。
 2. **差异方向口诀：本地多 = 待发版（正常）；云端多 = 先同步 云端→本地（事故信号）**。precheck 报差异 ≠ 事故：若差异是本地已知、尚未发版的工作，确认归属后正常发版即可；若云端存在你不知道的改动（热修/他人部署），才是事故信号。注意 tar 发版会把本地 mtime 带上云端，**云端 mtime 不能证明有人在服务器上改过文件**。
 3. **单写者原则**：同一时间只允许一个会话**发版**，其他会话对云端只读；**并行修改本地源码允许**（多会话各领任务是常态），但前提是源码已 git 管理（见 `references/config-schema.md` 接入检查项）且各会话分段 commit——**发版前差异归属必须判定并记录进台账**，归属不明（未提交且不知来源）的差异不得发版。**发版锁已内置**（`scripts/_lock.sh`）：deploy 脚本会拒绝并发发版，锁 30 分钟未释放自动回收；若上次发版会话异常中断，按脚本输出提示手动清锁后重试。
 4. **发版只走标准链路**（gateo-plan → 用户确认 → gateo-apply，已带计划闸门+预检+备份）；任何"直接上服务器改文件"的操作都是违规，直接跑 deploy 脚本会被计划闸门硬拒绝——**补生成计划并走确认，而不是绕过**。分析/诊断/规划不构成发版授权。
 5. **脚本退出码非 0 时不要盲目重试**。读失败输出定位原因（构建错误→报给用户；前置检查差异→走铁律1+方向口诀；备份失败→查磁盘/权限；健康检查失败→走铁律6）。
-6. **后端健康检查失败先甄别、再决定回滚**（2026-11-03 内容型项目实录修订）：
+6. **后端健康检查失败先甄别、再决定回滚**（2026-11-03 日报系统实录修订）：
    - **脚本已内置失败甄别**：首轮探活失败但服务进程仍在运行（compose ps / docker inspect 确认）→ 自动延长观察 60s（疑似启动预热）；延长后通过 = 发版成功，台账备注记"预热延长观察通过"；延长后仍失败或进程已退出 = 真故障
    - **真故障立即回滚**：`rollback.sh backend`（默认恢复最近备份），回滚成功后把失败日志（脚本已自动打印）报告给用户
    - **延长窗口仍不够的特殊情况**（预热超过 90s 等）：agent 可以做只读诊断（手动探活/容器状态/启动日志），但**不得自行决定"不回滚、转验收"**——必须把诊断证据（探活 200、容器状态、耗时）报给用户，经用户明确同意后才继续验收，决策与用户确认原文记入台账
@@ -166,13 +168,13 @@ preflight → plan → approval → backup → apply → readiness → acceptanc
 0. **跨 agent 发版台账 + 证据目录（共享真源，最先写）**：
    - **发版命令带证据目录**：`DEPLOY_EVIDENCE_DIR=<技能目录>/evidence/<项目>/$(date +%Y%m%d_%H%M%S)_<目标> PROJECT=<项目> bash scripts/deploy-backend.sh`——脚本自动建目录并把**全程输出**（锁/预检/备份 md5/校验/健康检查）留档为 `gateo-deploy-output.txt`
    - 验收后在证据目录写 `gateo-acceptance-report.md`（六步法产物，例行发版也生成）；E2E 截图存同目录（约定见 `evidence/README.md`）
-   - 向 `records/<项目名>.md` 追加台账行（deploy 脚本结尾会直接打印填好的行，补 验收/agent/证据/备注 四列即可粘贴），"证据"列填相对路径（如 `evidence/project-a/20261103_155241_backend`）
+   - 向 `records/<项目名>.md` 追加台账行（deploy 脚本结尾会直接打印填好的行，补 验收/agent/证据/备注 四列即可粘贴），"证据"列填相对路径（如 `evidence/sales/20261103_155241_backend`）
    - 跑 `bash scripts/build-index.sh` 刷新总目录 `records/_index.md`（跨项目全局索引，追踪入口）
    - git 提交（`cd ~/agent-skills && git add -A && git commit -m "deploy log: <项目> <结果>"`）。台账是所有 agent 共读的部署历史——WorkBuddy 发的版，Claude/Codex 也能查到回滚点
    ```markdown
    | 时间 | 目标 | 结果 | 验收 | 备份文件（回滚点） | 健康检查 | 操作 agent | 证据 | 备注 |
    |---|---|---|---|---|---|---|---|---|
-   | 2026-11-03 13:30 | backend | 成功 | 通过(5/5) | gateo_backend_app_bak_20261103_133000.tar.gz | healthy | WorkBuddy | evidence/project-a/gateo-20261103_133000_backend | 发布XX功能 |
+   | 2026-11-03 13:30 | backend | 成功 | 通过(5/5) | gateo_backend_app_bak_20261103_133000.tar.gz | healthy | WorkBuddy | evidence/sales/gateo-20261103_133000_backend | 发布XX功能 |
    ```
 1. **宿主 agent 会话日志（append-only）**——按当前宿主 agent 的记忆体系落盘：
    - WorkBuddy：`{workspace}/.workbuddy/memory/YYYY-MM-DD.md` 追加一条
@@ -183,10 +185,10 @@ preflight → plan → approval → backup → apply → readiness → acceptanc
 
 ## 召唤示例（提示词）
 
-- 发版：「用 gate-ops 发版 project-a 后端」「PROJECT=project-a 发前端 admin」
+- 发版：「用 gate-ops 发版 sales 后端」「PROJECT=sales 发前端 admin」
 - 验收：「对刚才这次发版做验收」（agent 按 `lifecycle/05-acceptance.md` 五步执行并出验收报告）
-- 回滚：「project-a 后端刚发的有问题，回滚到上一个备份」
-- 查历史：「project-a 最近发过哪些版本？最近回滚点是哪个备份？」→ 读 `records/project-a.md` + `rollback.sh list`
+- 回滚：「sales 后端刚发的有问题，回滚到上一个备份」
+- 查历史：「sales 最近发过哪些版本？最近回滚点是哪个备份？」→ 读 `records/sales.md` + `rollback.sh list`
 - 接入新项目：「把 `<项目名>` 接入 gate-ops：服务器 xxx，容器 xxx，构建源 xxx，健康检查 http://xxx，本地源码在 xxx」
 - 看连接通性：「帮我确认 XX 项目能不能连上服务器发版」→ 只跑 `precheck-deploy.sh`（只读）
 
@@ -218,6 +220,6 @@ preflight → plan → approval → backup → apply → readiness → acceptanc
 - `references/environment.md`：销售培训系统服务器拓扑、端口占用、强隔离铁律（动服务器前必读）
 - `references/mac-traps.md`：macOS/bash 3.2 环境陷阱清单（改脚本前必读：多字节变量、BSD grep、pipefail 竞态、tar mtime、zsh EXIT trap 等）
 - `references/browser-e2e.md`：浏览器端到端验收规程（E2E_MODE 三档配置、三端能力前置检查与安装路径、截图留证流程）
-- `profiles/project-a.sh` / `profiles/template.sh`：档案配置项说明
+- `profiles/sales.sh` / `profiles/template.sh`：档案配置项说明
 - `plans/`：大版本 release-plan 与路线规划存档（例行发版不使用；验收报告与截图统一存 `evidence/`）
 - `evidence/`：证据中心（每项目 × 每次发版一个目录：脚本输出留档 + 验收报告 + E2E 截图；约定见 `evidence/README.md`，总目录 `records/_index.md` 由 `scripts/build-index.sh` 聚合生成）

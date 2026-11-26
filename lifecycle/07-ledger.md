@@ -21,7 +21,7 @@ cd ~/agent-skills && git add -A && git commit -m "deploy log: <项目> <结果>"
 ```markdown
 | 时间 | 目标 | 结果 | 验收 | 备份文件（回滚点） | 健康检查 | 操作 agent | 证据 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 2026-11-03 13:30 | backend | 成功 | 通过(5/5) | gateo_backend_app_bak_20261103_133000.tar.gz | healthy | WorkBuddy | evidence/project-a/gateo-20261103_133000_backend | 发布XX功能 |
+| 2026-11-03 13:30 | backend | 成功 | 通过(5/5) | gateo_backend_app_bak_20261103_133000.tar.gz | healthy | WorkBuddy | evidence/sales/gateo-20261103_133000_backend | 发布XX功能 |
 ```
 
 - `结果`：成功 / 回滚 / 失败（已中止，云端未破坏）

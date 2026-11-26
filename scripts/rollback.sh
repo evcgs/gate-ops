@@ -48,6 +48,10 @@ SSH_OPTS="${SSH_OPTS:--o StrictHostKeyChecking=accept-new -o BatchMode=yes}"
 SERVER="${DEPLOY_SERVER:-${SERVER:-}}"
 [[ -n "$SERVER" ]] || { echo "❌ 未配置目标服务器——项目档案引用的凭据变量缺失？检查 ~/.gateo/credentials.sh 的 CRED_<项目>_SERVER"; exit 2; }
 [[ -n "$SSH_KEY" ]] || { echo "❌ 未配置 SSH_KEY，拒绝回滚"; exit 2; }
+# SSH 连接复用：消除密集新建握手被中间链路限流（详见 _ssh_pool.sh）
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/_ssh_pool.sh"
+ssh_pool_init
 _server_host="${SERVER#*@}"
 [[ -n "$_server_host" ]] && exec > >(sed "s|$_server_host|<server>|g") 2>&1
 BACKUP_DIR="${DEPLOY_BACKUP_DIR:-${BACKUP_DIR:-}}"
